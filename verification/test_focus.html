@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Verification Test Focus Mode</title>
+    <style>
+        .ad {
+            background: red;
+            height: 100px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Header (Should be dimmed)</h1>
+    </header>
+    <main>
+        <h1>Form (Inputs should be highlighted)</h1>
+        <form>
+            <input type="text" id="test-input" placeholder="Type here">
+            <button id="test-btn">Submit</button>
+        </form>
+        <p>Some text content (Should be dimmed)</p>
+    </main>
+    <div id="test-results"
+        style="border: 2px solid blue; padding: 10px; margin-top: 20px; position: relative; z-index: 10000; background: white;">
+    </div>
+
+    <script src="mock_chrome.js"></script>
+    <script src="../content.js"></script>
+    <!-- Link the styles so we can check computed styles if needed -->
+    <link rel="stylesheet" href="../styles.css">
+    <script>
+        setTimeout(() => {
+            const resultsDiv = document.getElementById('test-results');
+
+            // Enable Focus Mode
+            controller.enableFocus();
+
+            // Check z-index of input
+            const input = document.getElementById('test-input');
+            const btn = document.getElementById('test-btn');
+            const header = document.querySelector('header');
+
+            const inputStyle = window.getComputedStyle(input);
+            const btnStyle = window.getComputedStyle(btn);
+            const headerStyle = window.getComputedStyle(header);
+
+            // In a real browser check, we'd check if they are above the overlay. 
+            // The overlay is a pseudo-element on body, which is hard to check via JS directly in this simple runner without advanced logic.
+            // But we can check if the input has the expected relative position and z-index from our CSS class application.
+
+            // Wait, styles.css is NOT loaded into the DOM by the content script's simple inclusion here unless we inject it or link it. 
+            // I added standard <link> above.
+
+            // However, the CSS rules target `body.context-aware-focus input`. 
+            // So we check if body has class and if input matches that rule.
+
+            const bodyHasClass = document.body.classList.contains('context-aware-focus');
+            const inputZIndex = inputStyle.zIndex;
+
+            resultsDiv.innerHTML = `<h3>Focus Mode Result:</h3>
+            <p>Body Has Class: ${bodyHasClass}</p>
+            <p>Input Z-Index: ${inputZIndex} (Expected: 9999 or 'auto' if css not applied)</p>`;
+
+        }, 500);
+    </script>
+</body>
+
+</html>

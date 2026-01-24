@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Verification Test Form</title>
+    <style>
+        .ad {
+            background: red;
+            height: 100px;
+        }
+
+        .sidebar {
+            float: right;
+            width: 20%;
+            background: #ccc;
+        }
+
+        main {
+            width: 75%;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Website Header</h1>
+    </header>
+    <div class="sidebar">Sidebar with ads <div class="ad">Ad</div>
+    </div>
+    <main>
+        <h1>Registration Form</h1>
+        <p>Please fill out the form below.</p>
+        <form id="reg-form">
+            <div class="step">
+                <label>Name: <input type="text" required></label>
+            </div>
+            <div class="step">
+                <label>Email: <input type="email" required></label>
+            </div>
+            <div>
+                <label>Bio: <textarea></textarea></label>
+            </div>
+            <button type="submit">Submit</button>
+        </form>
+        <div class="ad">Bottom Ad</div>
+    </main>
+    <footer>Footer Content</footer>
+    <div id="test-results" style="border: 2px solid blue; padding: 10px; margin-top: 20px;"></div>
+
+    <script src="mock_chrome.js"></script>
+    <script src="../content.js"></script>
+    <script>
+        // Test Runner
+        setTimeout(() => {
+            const resultsDiv = document.getElementById('test-results');
+
+            // Test 1: Summarize
+            const summary = controller.summarizePage();
+            console.log("Summary Result:", summary);
+            resultsDiv.innerHTML += `<h3>Summary Result:</h3><ul>${summary.map(s => `<li>${s}</li>`).join('')}</ul>`;
+
+            // Test 2: Enable Simplify
+            controller.enableSimplify();
+
+            // Check visibility
+            const header = document.querySelector('header');
+            const sidebar = document.querySelector('.sidebar');
+            const main = document.querySelector('main');
+
+            const headerHidden = header.style.display === 'none';
+            const sidebarHidden = sidebar.style.display === 'none';
+            const mainVisible = main.style.display !== 'none';
+
+            resultsDiv.innerHTML += `<h3>Visibility Check:</h3>
+            <p>Header Hidden: ${headerHidden}</p>
+            <p>Sidebar Hidden: ${sidebarHidden}</p>
+            <p>Main Visible: ${mainVisible}</p>`;
+
+        }, 500);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Dynamic Content Test</title>
+    <style>
+        .ad {
+            background: red;
+            color: white;
+            padding: 20px;
+            margin: 10px;
+        }
+
+        .content {
+            background: #eee;
+            padding: 20px;
+            margin: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Dynamic Content Loading</h1>
+    <div id="container">
+        <div class="content">Initial Content</div>
+        <div class="ad">Initial Ad</div>
+    </div>
+    <button id="loadMore">Load More Content</button>
+
+    <script src="mock_chrome.js"></script>
+    <script src="../lib/Readability.js"></script>
+    <script src="../content.js"></script>
+    <script>
+        // Mock Legacy Simplify Trigger
+        setTimeout(() => {
+            console.log("Enabling Legacy Simplify...");
+            controller.enableLegacySimplify();
+        }, 1000);
+
+        document.getElementById('loadMore').addEventListener('click', () => {
+            const container = document.getElementById('container');
+
+            // Add new content
+            const newContent = document.createElement('div');
+            newContent.className = 'content';
+            newContent.innerText = 'New Content Loaded dynamically...';
+            container.appendChild(newContent);
+
+            // Add new distraction
+            const newAd = document.createElement('div');
+            newAd.className = 'ad';
+            newAd.innerText = 'New Dynamic Ad (Should be hidden)';
+            container.appendChild(newAd);
+        });
+
+        // Auto-click after 2.5 seconds (after simplify is enabled)
+        setTimeout(() => {
+            console.log("Simulating dynamic content load...");
+            document.getElementById('loadMore').click();
+        }, 2500);
+    </script>
+</body>
+
+</html>

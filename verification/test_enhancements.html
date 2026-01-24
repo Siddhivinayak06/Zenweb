@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Verification Enhancements</title>
+</head>
+
+<body class="context-aware-simplify">
+    <h1>Enhancement Verification</h1>
+    <p>This text should change font when Dyslexia Mode is enabled.</p>
+    <p>The background should change color when Sepia/Dark themes are active.</p>
+
+    <div id="test-results" style="border: 2px solid blue; padding: 10px; margin-top: 20px;"></div>
+
+    <script src="mock_chrome.js"></script>
+    <script src="../content.js"></script>
+    <!-- Link styles to check visibility/font application -->
+    <link rel="stylesheet" href="../styles.css">
+
+    <script>
+        setTimeout(() => {
+            const resultsDiv = document.getElementById('test-results');
+
+            // 1. Enable Dyslexia Font
+            // Simulate message from popup
+            const listeners = window.onMessageCallback;
+            // In our mock_chrome.js we captured the listener in window.onMessageCallback? 
+            // Let's check mock_chrome.js... yes strict implementation:
+            /*
+            addListener: (callback) => {
+                window.onMessageCallback = callback;
+            }
+            */
+
+            // Trigger 1: Enable Dyslexia
+            if (window.onMessageCallback) window.onMessageCallback({ action: 'enable_dyslexia' }, {}, () => { });
+            const bodyFont = window.getComputedStyle(document.body).fontFamily;
+            const hasDyslexiaClass = document.body.classList.contains('context-aware-dyslexia-font');
+
+            // Trigger 2: Set Dark Theme
+            if (window.onMessageCallback) window.onMessageCallback({ action: 'set_theme_dark' }, {}, () => { });
+            const hasDarkClass = document.body.classList.contains('context-aware-theme-dark');
+            const bgColor = window.getComputedStyle(document.body).backgroundColor;
+
+            resultsDiv.innerHTML = `<h3>Enhancement Results:</h3>
+            <p>Dyslexia Class Added: ${hasDyslexiaClass}</p>
+            <p>Computed Font: ${bodyFont} (Should contain Comic Sans or Verdana)</p>
+            <p>Dark Theme Class Added: ${hasDarkClass}</p>
+            <p>Computed BG Color: ${bgColor} (Should be dark, #1a1a1a is roughly rgb(26, 26, 26))</p>`;
+
+        }, 500);
+    </script>
+</body>
+
+</html>

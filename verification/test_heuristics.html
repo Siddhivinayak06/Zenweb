@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Verification Heuristics</title>
+</head>
+
+<body>
+    <nav>
+        <!-- High link density area -->
+        <ul>
+            <li><a href="#">Link 1</a></li>
+            <li><a href="#">Link 2</a></li>
+            <li><a href="#">Link 3</a></li>
+            <li><a href="#">Link 4</a></li>
+            <li><a href="#">Link 5</a></li>
+        </ul>
+    </nav>
+    <main>
+        <h1>Article Content</h1>
+        <p>This is the main content. It should be scored highly.</p>
+        <p>It contains paragraphs of text that the user wants to read.</p>
+
+        <div class="ad">Advert should be hidden</div>
+
+        <div class="social-share">
+            <button>Share</button>
+        </div>
+    </main>
+    <footer style="margin-top:50px">
+        <a href="#">Footer Link 1</a>
+        <a href="#">Footer Link 2</a>
+    </footer>
+
+    <div id="test-results" style="border: 2px solid blue; padding: 10px; margin-top: 20px;"></div>
+
+    <script src="mock_chrome.js"></script>
+    <script src="../lib/Readability.js"></script>
+    <script src="../content.js"></script>
+    <!-- Link styles -->
+    <link rel="stylesheet" href="../styles.css">
+
+    <script>
+        setTimeout(() => {
+            const resultsDiv = document.getElementById('test-results');
+
+            // Check link density of nav
+            const nav = document.querySelector('nav');
+            const navDensity = controller.getLinkDensity(nav);
+
+            // Invoke simplify
+            controller.enableSimplify();
+
+            // Check visible classes
+            const main = document.querySelector('main');
+            const hasSimpleClass = main.classList.contains('context-aware-simplified-content');
+
+            // Check hidden distractions
+            const ad = document.querySelector('.ad');
+            const adHidden = ad.style.display === 'none';
+
+            resultsDiv.innerHTML = `<h3>Heuristic Results:</h3>
+            <p>Nav Link Density: ${navDensity.toFixed(2)} (Should be high, e.g. > 0.5)</p>
+            <p>Main Content Simplified Class: ${hasSimpleClass}</p>
+            <p>Ad Hidden: ${adHidden}</p>`;
+
+        }, 500);
+    </script>
+</body>
+
+</html>

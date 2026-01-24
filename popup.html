@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ZenWeb</title>
+  <link rel="stylesheet" href="popup.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+</head>
+
+<body>
+  <div class="app-container">
+    <header>
+      <div class="logo-area">
+        <span class="logo-icon">✨</span>
+        <h1>ZenWeb</h1>
+      </div>
+      <div id="connection-status" class="status-badge">
+        <span class="status-dot"></span>
+        <span class="status-text">Connecting...</span>
+      </div>
+    </header>
+
+    <div class="glass-panel">
+      <!-- Live Stats Area -->
+      <div id="live-stats" class="live-stats hidden">
+        <div class="stat-item">
+          <span class="stat-value" id="distraction-count">0</span>
+          <span class="stat-label">Distractions Hidden</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value" id="active-mode">None</span>
+          <span class="stat-label">Active Mode</span>
+        </div>
+      </div>
+
+      <div class="card-section">
+        <span class="section-title">Modes</span>
+        <div class="mode-toggles">
+          <button id="btn-simplify" class="mode-btn" data-mode="simplify" aria-label="Simplify Mode">
+            <span class="icon">📖</span>
+            <span class="label">Simplify</span>
+          </button>
+          <button id="btn-focus" class="mode-btn" data-mode="focus" aria-label="Focus Mode">
+            <span class="icon">🎯</span>
+            <span class="label">Focus</span>
+          </button>
+        </div>
+        <button id="btn-reset" class="reset-btn">Reset View</button>
+      </div>
+
+      <div class="card-section">
+        <span class="section-title">Appearance</span>
+        <div class="appearance-controls">
+          <div class="toggle-row">
+            <label for="check-dyslexia">Dyslexia Font</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="check-dyslexia">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="theme-selector">
+            <button class="theme-btn" data-theme="light" title="Light Theme">☀</button>
+            <button class="theme-btn" data-theme="sepia" title="Sepia Theme">☕</button>
+            <button class="theme-btn" data-theme="dark" title="Dark Theme">☾</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-section">
+        <span class="section-title">AI Summary</span>
+        <div id="summary-container" class="summary-box">
+          <div class="empty-state">
+            <span class="icon">🤖</span>
+            <p>Click 'Generate' to analyze page</p>
+          </div>
+        </div>
+        <button id="btn-summarize" class="action-btn">Generate Summary</button>
+      </div>
+    </div>
+
+    <div id="footer-msg">Ready to help</div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+
+</html>

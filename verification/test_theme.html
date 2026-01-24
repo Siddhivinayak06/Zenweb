@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Verification</title>
+    <link rel="stylesheet" href="../styles.css">
+    <style>
+        /* Mock body content */
+        body {
+            padding: 20px;
+            font-family: sans-serif;
+        }
+    </style>
+</head>
+
+<body class="context-aware-simplify context-aware-theme-light">
+    <h1>Original Page Content (Should be covered)</h1>
+    <p>This text is behind the overlay.</p>
+
+    <!-- Mock Reader Overlay -->
+    <div class="context-aware-reader-overlay context-aware-theme-light">
+        <div class="context-aware-reader-toolbar">
+            <div class="context-aware-reader-controls">
+                <button id="theme-toggle" title="Toggle Theme">
+                    <span>🎨</span>
+                </button>
+                <button>A-</button>
+                <button>A+</button>
+            </div>
+            <button class="context-aware-reader-close">×</button>
+        </div>
+        <div class="context-aware-reader-content">
+            <h1>Sample Article Title</h1>
+            <div class="context-aware-reader-meta">
+                <span>By Author Name</span>
+            </div>
+            <p>This is a sample paragraph to test the readability theme. It should have high contrast color and legible
+                font.</p>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et
+                dolore magna aliqua.</p>
+            <ul>
+                <li>List item one</li>
+                <li>List item two</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const themes = ['light', 'sepia', 'dark'];
+        const btn = document.getElementById('theme-toggle');
+        const body = document.body;
+        const overlay = document.querySelector('.context-aware-reader-overlay');
+
+        btn.addEventListener('click', () => {
+            let current = 'light';
+            if (body.classList.contains('context-aware-theme-dark')) current = 'dark';
+            else if (body.classList.contains('context-aware-theme-sepia')) current = 'sepia';
+
+            const next = themes[(themes.indexOf(current) + 1) % themes.length];
+
+            // Apply to body
+            body.classList.remove('context-aware-theme-light', 'context-aware-theme-dark', 'context-aware-theme-sepia');
+            body.classList.add(`context-aware-theme-${next}`);
+
+            // Apply to overlay
+            overlay.classList.remove('context-aware-theme-light', 'context-aware-theme-dark', 'context-aware-theme-sepia');
+            overlay.classList.add(`context-aware-theme-${next}`);
+
+            console.log(`Switched to ${next}`);
+        });
+    </script>
+</body>
+
+</html>

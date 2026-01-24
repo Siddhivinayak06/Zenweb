@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Popup UI Verification</title>
+    <!-- Link directly to the popup CSS -->
+    <link rel="stylesheet" href="../popup.css">
+    <style>
+        /* Test harness styles to simulate popup environment */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #333;
+            /* Dark background to see the popup clearly */
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* Wrapper to simulate the popup window/container behavior if needed, 
+           but popup.css usually targets 'body' or '.app-container' */
+        .preview-wrapper {
+            /* This wrapper allows us to resize it to test responsiveness */
+            width: 100%;
+            max-width: 400px;
+            /* Max width of typical popup */
+            resize: horizontal;
+            overflow: auto;
+            border: 2px dashed #666;
+            background: white;
+            /* Reset background for the "iframe" effect if body has bg */
+            padding: 0;
+            position: relative;
+        }
+
+        /* We need to apply the popup body styles to a container here effectively, 
+           or iframe it. If we include popup.css, it targets 'body'. 
+           To avoid conflict, it might be better to iframe, but let's try inline first 
+           and see if we need to adjust selectors. 
+           Actually, popup.css has:
+           body { width: 360px; ... }
+           
+           So this test file's body will get those styles. 
+           Wait, if I link popup.css, it will force the body of this test page to be 360px.
+           That's fine for a direct preview.
+        */
+    </style>
+</head>
+
+<body>
+    <!-- 
+      We will just paste the content of popup.html (inside body) here.
+      For the harness, I'll essentially duplicate the structure of popup.html.
+    -->
+    <div class="app-container">
+        <header>
+            <div class="logo-area">
+                <span class="logo-icon">✨</span>
+                <h1>ContextAware</h1>
+            </div>
+            <div id="connection-status" class="status-badge">
+                <span class="status-dot"></span>
+                <span class="status-text">Connecting...</span>
+            </div>
+        </header>
+
+        <div class="glass-panel">
+            <!-- Live Stats Area -->
+            <div id="live-stats" class="live-stats hidden">
+                <div class="stat-item">
+                    <span class="stat-value" id="distraction-count">0</span>
+                    <span class="stat-label">Distractions Hidden</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="active-mode">None</span>
+                    <span class="stat-label">Active Mode</span>
+                </div>
+            </div>
+
+            <div class="card-section">
+                <span class="section-title">Modes</span>
+                <div class="mode-toggles">
+                    <button id="btn-simplify" class="mode-btn" data-mode="simplify">
+                        <span class="icon">📖</span>
+                        <span class="label">Simplify</span>
+                    </button>
+                    <button id="btn-focus" class="mode-btn" data-mode="focus">
+                        <span class="icon">🎯</span>
+                        <span class="label">Focus</span>
+                    </button>
+                </div>
+                <button id="btn-reset" class="reset-btn">Reset View</button>
+            </div>
+
+            <div class="card-section">
+                <span class="section-title">Appearance</span>
+                <div class="appearance-controls">
+                    <div class="toggle-row">
+                        <label for="check-dyslexia">Dyslexia Font</label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="check-dyslexia">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="theme-selector">
+                        <button class="theme-btn" data-theme="light" title="Light Theme">☀</button>
+                        <button class="theme-btn" data-theme="sepia" title="Sepia Theme">☕</button>
+                        <button class="theme-btn" data-theme="dark" title="Dark Theme">☾</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-section">
+                <span class="section-title">AI Summary</span>
+                <div id="summary-container" class="summary-box">
+                    <div class="empty-state">
+                        <span class="icon">🤖</span>
+                        <p>Click 'Generate' to analyze page</p>
+                    </div>
+                </div>
+                <button id="btn-summarize" class="action-btn">Generate Summary</button>
+            </div>
+        </div>
+
+        <div id="footer-msg">Ready to help</div>
+    </div>
+
+    <script>
+        // Mock JS just to make buttons clickable visually
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+    </script>
+</body>
+
+</html>

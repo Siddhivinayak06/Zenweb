@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Test News Article - The Daily Noise</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+        }
+
+        header,
+        footer {
+            background: #eee;
+            padding: 20px;
+            width: 100%;
+        }
+
+        nav {
+            width: 200px;
+            background: #ddd;
+            padding: 20px;
+        }
+
+        main {
+            flex: 1;
+            padding: 20px;
+        }
+
+        .ad {
+            background: #f00;
+            color: white;
+            padding: 10px;
+            margin: 10px 0;
+            height: 100px;
+        }
+
+        .sidebar {
+            width: 200px;
+            background: #f9f9f9;
+            padding: 20px;
+        }
+    </style>
+    <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body>
+
+    <nav>
+        <ul>
+            <li>Home</li>
+            <li>World</li>
+            <li>Tech</li>
+        </ul>
+    </nav>
+
+    <div style="flex: 1; display: flex; flex-direction: column;">
+        <header>
+            <h1>The Daily Noise</h1>
+        </header>
+
+        <div style="display: flex;">
+            <main>
+                <article>
+                    <h1>Cognitive Load in Mainstream Media</h1>
+                    <p>This is the first paragraph of the main content. It discusses how modern websites are cluttered
+                        with information. Users find it hard to focus.</p>
+                    <div class="ad">BUY THIS NOW!</div>
+                    <p>The solution is a browser extension that simplifies the view. This paragraph explains the
+                        benefits of the 'ContextAware' tool. It removes distractions effectively.</p>
+                    <p>Focus mode helps users concentrate on specific tasks. Simplify mode removes all the noise. This
+                        is the conclusion of the article.</p>
+                    <p>Extra filler text to ensure we have enough for summarization. The summarization algorithm looks
+                        for frequent words.</p>
+                </article>
+            </main>
+
+            <aside class="sidebar">
+                <h3>Related Links</h3>
+                <ul>
+                    <li>Clickbait 1</li>
+                    <li>Clickbait 2</li>
+                </ul>
+                <div class="ad">SIDEBAR ADVERTISEMENT</div>
+            </aside>
+        </div>
+
+        <footer>
+            <p>&copy; 2024 The Daily Noise</p>
+        </footer>
+    </div>
+
+    <!-- Simulate the content script injection -->
+    <script src="../content.js"></script>
+    <script>
+        // Mock chrome runtime for testing
+        window.chrome = {
+            runtime: {
+                onMessage: {
+                    addListener: (callback) => {
+                        window.mockSendMessage = callback;
+                    }
+                }
+            }
+        };
+        // Re-init controller because we defined chrome after script load (script load order matters, but here we hack it)
+        // Actually content.js runs immediately. We need to delay its init or mock chrome before loading content.js
+        // Since content.js is already loaded, we can just instantiate a new controller manually for testing if the class is exposed.
+        // But content.js doesn't export the class, it processes immediately.
+        // Let's reload the controller logic by pasting it or just assuming the 'controller' instance is globally available if we didn't encapuslate it in a closure.
+        // In my implementation, `const controller = new ContextAwareController();` is at the bottom, so `controller` is global in this scope.
+
+    </script>
+</body>
+
+</html>

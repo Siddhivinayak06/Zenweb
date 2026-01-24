@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>News Portal Mockup</title>
+    <link rel="stylesheet" href="../styles.css">
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 0;
+        }
+
+        header {
+            background: #eee;
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+        }
+
+        nav {
+            background: #ddd;
+            padding: 10px;
+        }
+
+        main {
+            padding: 20px;
+            display: flex;
+        }
+
+        aside {
+            background: #f9f9f9;
+            width: 200px;
+            padding: 10px;
+            margin-left: 20px;
+        }
+
+        .content {
+            flex: 1;
+        }
+
+        .ad {
+            background: #ffcccc;
+            padding: 20px;
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        footer {
+            background: #333;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .article-card {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>My News Portal</h1>
+        <div class="search">Search...</div>
+    </header>
+    <nav>
+        <a href="#">Home</a> | <a href="#">World</a> | <a href="#">Local</a>
+    </nav>
+
+    <div class="ad">Top Banner Ad</div>
+
+    <main>
+        <div class="content">
+            <div class="article-card">
+                <h2>News Story 1</h2>
+                <p>Summary of news story 1...</p>
+            </div>
+            <div class="article-card">
+                <h2>News Story 2</h2>
+                <p>Summary of news story 2...</p>
+            </div>
+        </div>
+        <aside>
+            <h3>Trending</h3>
+            <ul>
+                <li>Trend 1</li>
+                <li>Trend 2</li>
+            </ul>
+            <div class="ad">Sidebar Ad</div>
+        </aside>
+    </main>
+
+    <footer>
+        &copy; 2026 News Portal Inc.
+    </footer>
+
+    <script src="mock_chrome.js"></script>
+    <script src="../lib/Readability.js"></script>
+    <script src="../content.js"></script>
+    <script>
+        // Mock the Portal detection by forcing enableLegacySimplify
+        // content.js auto-detects portal based on path, but here we can just call it to test visual changes
+        console.log("Loading Test Portal...");
+        setTimeout(() => {
+            console.log("Enabling Legacy Simplify...");
+            controller.enableLegacySimplify();
+        }, 1000);
+    </script>
+</body>
+
+</html>
