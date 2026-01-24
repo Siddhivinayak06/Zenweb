@@ -23,6 +23,19 @@ chrome.commands.onCommand.addListener((command) => {
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === 'inject_script') {
+        chrome.scripting.executeScript({
+            target: { tabId: sender.tab.id },
+            files: [request.file]
+        }).then(() => {
+            sendResponse({ status: 'injected' });
+        }).catch((err) => {
+            console.error("Script injection failed", err);
+            sendResponse({ error: err.message });
+        });
+        return true; // Async response
+    }
+
     if (request.action === 'summarize_with_api') {
         handleSummarizeWithApi(request.text, sendResponse);
         return true; // Keep channel open for async response
@@ -74,5 +87,80 @@ async function handleSummarizeWithApi(text, sendResponse) {
     } catch (e) {
         console.error("Background API Fetch Failed:", e);
         sendResponse({ error: 'Network request failed.' });
+    }
+}
+
+// Context Menu for "Explain Selection"
+chrome.runtime.onInstalled.addListener(() => {
+    chrome.contextMenus.create({
+        id: 'zenweb-explain',
+        title: 'Explain with ZenWeb',
+        contexts: ['selection']
+    });
+});
+
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+    if (info.menuItemId === 'zenweb-explain' && info.selectionText) {
+        // Open side panel and send the selection
+        chrome.sidePanel.open({ tabId: tab.id }).then(() => {
+            // Small delay to ensure panel is ready
+            setTimeout(() => {
+                chrome.runtime.sendMessage({
+                    action: 'explain_selection',
+                    text: info.selectionText
+                });
+            }, 300);
+        });
+    }
+});
+
+// Chat with Page handler
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === 'chat_with_api') {
+        handleChatWithApi(request.question, request.context, sendResponse);
+        return true;
+    }
+});
+
+async function handleChatWithApi(question, context, sendResponse) {
+    try {
+        const data = await chrome.storage.sync.get('geminiApiKey');
+        const apiKey = data.geminiApiKey;
+
+        if (!apiKey) {
+            sendResponse({ error: 'No API Key found. Please add it in settings.' });
+            return;
+        }
+
+        const prompt = `You are a helpful assistant analyzing a webpage. Answer the user's question based ONLY on the provided page content. Be concise.
+
+PAGE CONTENT:
+${context.substring(0, 15000)}
+
+USER QUESTION: ${question}
+
+ANSWER:`;
+
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }]
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            sendResponse({ error: errorData.error?.message || 'API Error' });
+            return;
+        }
+
+        const result = await response.json();
+        const answer = result.candidates[0].content.parts[0].text;
+        sendResponse({ answer });
+
+    } catch (e) {
+        console.error("Chat API Failed:", e);
+        sendResponse({ error: 'Request failed.' });
     }
 }

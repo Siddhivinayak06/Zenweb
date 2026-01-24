@@ -78,7 +78,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!currentTabId) return;
 
     chrome.tabs.sendMessage(currentTabId, { action: 'get_status' }, (response) => {
-      if (chrome.runtime.lastError || !response) {
+      // Suppress error on pages where content script can't run
+      if (chrome.runtime.lastError) {
         connectionStatus.classList.remove('connected');
         statusText.textContent = "Disconnected";
         liveStats.classList.add('hidden');
@@ -149,6 +150,11 @@ document.addEventListener('DOMContentLoaded', () => {
   function sendMessageToCurrentTab(action, callback) {
     if (!currentTabId) return;
     chrome.tabs.sendMessage(currentTabId, { action: action }, (response) => {
+      if (chrome.runtime.lastError) {
+        // Ignore errors on restricted pages
+        console.log('ZenWeb: Tab not available for messaging');
+        return;
+      }
       if (callback) callback(response);
     });
   }
@@ -282,5 +288,85 @@ document.addEventListener('DOMContentLoaded', () => {
       settingsStatus.textContent = "Saved!";
       setTimeout(() => settingsStatus.textContent = "", 2000);
     });
+  });
+
+  // ========== CHAT WITH PAGE ==========
+  const chatMessages = document.getElementById('chat-messages');
+  const chatInput = document.getElementById('chat-input');
+  const btnSendChat = document.getElementById('btn-send-chat');
+  let pageContext = ''; // Cached page content
+
+  // Get page context on load
+  async function loadPageContext() {
+    if (!currentTabId) return;
+    chrome.tabs.sendMessage(currentTabId, { action: 'get_page_content' }, (response) => {
+      if (response && response.content) {
+        pageContext = response.content;
+      }
+    });
+  }
+
+  // Chat functions
+  function addChatBubble(text, type) {
+    // Remove welcome message if present
+    const welcome = chatMessages.querySelector('.chat-welcome');
+    if (welcome) welcome.remove();
+
+    const bubble = document.createElement('div');
+    bubble.className = `chat-bubble ${type}`;
+    bubble.textContent = text;
+    chatMessages.appendChild(bubble);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    return bubble;
+  }
+
+  async function sendChatMessage(question) {
+    if (!question.trim()) return;
+
+    addChatBubble(question, 'user');
+    chatInput.value = '';
+
+    const loadingBubble = addChatBubble('Thinking...', 'loading');
+
+    // Load page context if not loaded
+    if (!pageContext) await loadPageContext();
+
+    chrome.runtime.sendMessage({
+      action: 'chat_with_api',
+      question: question,
+      context: pageContext
+    }, (response) => {
+      loadingBubble.remove();
+      if (response.error) {
+        addChatBubble(`Error: ${response.error}`, 'ai');
+      } else {
+        addChatBubble(response.answer, 'ai');
+      }
+    });
+  }
+
+  btnSendChat.addEventListener('click', () => {
+    sendChatMessage(chatInput.value);
+  });
+
+  chatInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      sendChatMessage(chatInput.value);
+    }
+  });
+
+  // Listen for explain_selection from context menu
+  chrome.runtime.onMessage.addListener((request) => {
+    if (request.action === 'explain_selection') {
+      const question = `Explain this: "${request.text}"`;
+      sendChatMessage(question);
+    }
+  });
+
+  // Load context when tab changes
+  chrome.tabs.onActivated.addListener(() => {
+    updateActiveTab();
+    pageContext = '';
+    loadPageContext();
   });
 });

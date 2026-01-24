@@ -12,8 +12,27 @@ class ReaderManager {
         });
     }
 
-    enable() {
+    async enable() {
         if (this.isActive) return;
+
+        // Check if Readability is loaded
+        if (typeof Readability === 'undefined') {
+            console.log("ZenWeb: Lazy loading Readability.js...");
+            try {
+                await new Promise((resolve, reject) => {
+                    chrome.runtime.sendMessage({ action: 'inject_script', file: 'lib/Readability.js' }, (response) => {
+                        if (chrome.runtime.lastError || response.error) {
+                            reject(response.error || chrome.runtime.lastError.message);
+                        } else {
+                            resolve();
+                        }
+                    });
+                });
+            } catch (e) {
+                console.error("ZenWeb: Failed to load Readability.js", e);
+                return;
+            }
+        }
 
         // Detection Strategy:
         // 1. Check URL patterns for known aggregators
@@ -90,6 +109,11 @@ class ReaderManager {
 
 
         this.speechManager.stop();
+
+        if (this.shortcutHandler) {
+            document.removeEventListener('keydown', this.shortcutHandler);
+            this.shortcutHandler = null;
+        }
     }
 
     injectReader(article) {
@@ -124,6 +148,38 @@ class ReaderManager {
 
         // Apply Theme
         this.themeManager.syncOverlayTheme(overlay);
+
+        // Keyboard Shortcuts
+        this.shortcutHandler = (e) => {
+            if (e.key === 'Escape') {
+                this.disable();
+                return;
+            }
+            if (!this.isActive) return; // Safety
+
+            // Only trigger if not typing in an input (unlikely in reader mode, but good practice)
+            if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+
+            switch (e.key) {
+                case '+':
+                case '=': // Often shares key with +
+                    overlay.querySelector('#reader-font-increase').click();
+                    break;
+                case '-':
+                case '_':
+                    overlay.querySelector('#reader-font-decrease').click();
+                    break;
+                case 't':
+                case 'T':
+                    overlay.querySelector('#reader-theme-toggle').click();
+                    break;
+                case 's':
+                case 'S':
+                    overlay.querySelector('#reader-speech-toggle').click();
+                    break;
+            }
+        };
+        document.addEventListener('keydown', this.shortcutHandler);
 
         // Bind Events
         overlay.querySelector('.context-aware-reader-close').addEventListener('click', () => {

@@ -37,11 +37,22 @@ class FocusManager {
         };
 
         document.addEventListener('mousemove', this.mouseMoveHandler);
+
+        this.keyDownHandler = (e) => {
+            if (e.key === 'Escape') {
+                this.disable();
+            }
+        };
+        document.addEventListener('keydown', this.keyDownHandler);
     }
 
     disableVisualAids() {
         if (this.readingGuide) this.readingGuide.remove();
         document.removeEventListener('mousemove', this.mouseMoveHandler);
+        if (this.keyDownHandler) {
+            document.removeEventListener('keydown', this.keyDownHandler);
+            this.keyDownHandler = null;
+        }
 
         // Clear any active highlights
         const highlighted = document.querySelectorAll('.focus-mode-highlight');
@@ -63,14 +74,14 @@ class FocusManager {
         }
     }
 
-    injectTimer() {
+    async injectTimer() {
         if (document.getElementById('zenweb-focus-timer')) return;
 
         const timer = document.createElement('div');
         timer.id = 'zenweb-focus-timer';
         timer.className = 'zenweb-timer-widget';
         timer.innerHTML = `
-            <div class="timer-display">25:00</div>
+            <div class="timer-display">--:--</div>
             <div class="timer-controls">
                 <button id="timer-toggle" title="Start/Pause">▶</button>
                 <button id="timer-reset" title="Reset">↺</button>
@@ -93,69 +104,138 @@ class FocusManager {
         presets.forEach(btn => {
             btn.addEventListener('click', () => {
                 const mins = parseInt(btn.dataset.time);
-                this.stopTimer();
-                this.timeLeft = mins * 60;
-                this.updateTimerDisplay();
-                // feedback
-                presets.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
+                this.setTimerDuration(mins);
             });
         });
+
+        // Initialize state from storage
+        const state = await this.getTimerState();
+        if (state.isRunning) {
+            this.startTicker();
+        }
+        this.updateTimerUI(state);
     }
 
     removeTimer() {
         const timer = document.getElementById('zenweb-focus-timer');
         if (timer) timer.remove();
-        this.stopTimer();
+        this.stopTicker();
     }
 
-    toggleTimer() {
-        if (this.timerRunning) {
-            this.stopTimer();
+    async getTimerState() {
+        return new Promise((resolve) => {
+            chrome.storage.local.get(['focusTimer'], (result) => {
+                const now = Date.now();
+                const data = result.focusTimer || {
+                    isRunning: false,
+                    endTime: null,
+                    remaining: 25 * 60,
+                    lastUpdated: now
+                };
+
+                // If running, recalculate remaining
+                if (data.isRunning && data.endTime) {
+                    const remaining = Math.max(0, Math.ceil((data.endTime - now) / 1000));
+                    if (remaining === 0) {
+                        data.isRunning = false; // Expired
+                        data.remaining = 0;
+                        this.saveTimerState(data); // Sync expiration
+                    } else {
+                        data.remaining = remaining;
+                    }
+                }
+
+                resolve(data);
+            });
+        });
+    }
+
+    saveTimerState(state) {
+        chrome.storage.local.set({ focusTimer: state });
+        this.updateTimerUI(state);
+    }
+
+    async setTimerDuration(minutes) {
+        const state = {
+            isRunning: false,
+            endTime: null,
+            remaining: minutes * 60,
+            lastUpdated: Date.now()
+        };
+        this.saveTimerState(state);
+        this.stopTicker(); // Stop any running ticker
+    }
+
+    async toggleTimer() {
+        let state = await this.getTimerState();
+        if (state.isRunning) {
+            // Pause
+            state.isRunning = false;
+            state.endTime = null; // Clear end time
+            this.stopTicker();
         } else {
-            this.startTimer();
+            // Start
+            if (state.remaining <= 0) state.remaining = 25 * 60; // Reset if 0
+            state.isRunning = true;
+            state.endTime = Date.now() + (state.remaining * 1000);
+            this.startTicker();
         }
-        this.updateTimerUI();
+        this.saveTimerState(state);
     }
 
-    startTimer() {
-        if (this.timerRunning) return;
-        this.timerRunning = true;
-        this.timerInterval = setInterval(() => {
-            this.timeLeft--;
-            this.updateTimerDisplay();
-            if (this.timeLeft <= 0) {
-                this.stopTimer();
+    async resetTimer() {
+        this.stopTicker();
+        // Default to last known duration or 25 mins? Let's reset to 25.
+        const state = {
+            isRunning: false,
+            endTime: null,
+            remaining: 25 * 60,
+            lastUpdated: Date.now()
+        };
+        this.saveTimerState(state);
+    }
+
+    startTicker() {
+        if (this.timerInterval) clearInterval(this.timerInterval);
+        this.timerInterval = setInterval(async () => {
+            const state = await this.getTimerState(); // Fetch fresh to stay synced? Or just local logic?
+            // Optimization: Just calc local based on known EndTime if running
+            // But we need to check if another tab paused it.
+            // For now, let's trust the checking logic in getTimerState handles the time calc.
+
+            if (!state.isRunning) {
+                this.stopTicker();
+                return;
+            }
+
+            this.updateTimerUI(state);
+
+            if (state.remaining <= 0) {
+                this.stopTicker();
                 this.timerEnded();
             }
         }, 1000);
     }
 
-    stopTimer() {
-        this.timerRunning = false;
+    stopTicker() {
         if (this.timerInterval) clearInterval(this.timerInterval);
+        this.timerInterval = null;
     }
 
-    resetTimer() {
-        this.stopTimer();
-        this.timeLeft = 25 * 60;
-        this.updateTimerDisplay();
-        this.updateTimerUI();
-    }
+    updateTimerUI(state) {
+        if (!state) return;
 
-    updateTimerDisplay() {
         const timerDisplay = document.querySelector('#zenweb-focus-timer .timer-display');
+        const toggleBtn = document.querySelector('#zenweb-focus-timer #timer-toggle');
+
         if (timerDisplay) {
-            const m = Math.floor(this.timeLeft / 60).toString().padStart(2, '0');
-            const s = (this.timeLeft % 60).toString().padStart(2, '0');
+            const m = Math.floor(state.remaining / 60).toString().padStart(2, '0');
+            const s = (state.remaining % 60).toString().padStart(2, '0');
             timerDisplay.textContent = `${m}:${s}`;
         }
-    }
 
-    updateTimerUI() {
-        const toggleBtn = document.querySelector('#zenweb-focus-timer #timer-toggle');
         if (toggleBtn) {
-            toggleBtn.textContent = this.timerRunning ? '⏸' : '▶';
+            toggleBtn.textContent = state.isRunning ? '⏸' : '▶';
         }
     }
 

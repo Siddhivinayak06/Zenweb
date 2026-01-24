@@ -27,15 +27,19 @@ class ContextAwareController {
         chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             if (request.action === 'enable_simplify') {
                 this.enableSimplify();
+                this.showToast('Simplify Mode Enabled');
                 sendResponse({ status: 'Simplify Mode Enabled' });
             } else if (request.action === 'enable_focus') {
                 this.enableFocus();
+                this.showToast('Focus Mode Enabled');
                 sendResponse({ status: 'Focus Mode Enabled' });
             } else if (request.action === 'toggle_simplify') {
                 this.toggleSimplify();
+                this.showToast(this.mode === 'simplify' ? 'Simplify Mode On' : 'Simplify Mode Off');
                 sendResponse({ status: 'Toggled Simplify' });
             } else if (request.action === 'toggle_focus') {
                 this.toggleFocus();
+                this.showToast(this.mode === 'focus' ? 'Focus Mode On' : 'Focus Mode Off');
                 sendResponse({ status: 'Toggled Focus' });
             } else if (request.action === 'reset') {
                 this.reset();
@@ -60,6 +64,10 @@ class ContextAwareController {
             } else if (request.action.startsWith('set_theme_')) {
                 // Handled by ThemeManager listener, but we ack here too
                 sendResponse({ status: 'Theme Updated' });
+            } else if (request.action === 'get_page_content') {
+                // Return main page text for Chat with Page feature
+                const content = document.body.innerText || '';
+                sendResponse({ content: content.substring(0, 20000) });
             }
         });
     }
@@ -102,6 +110,23 @@ class ContextAwareController {
         this.reset();
         this.mode = 'focus';
         this.focusManager.enable();
+    }
+
+    showToast(message) {
+        let toast = document.querySelector('.zenweb-toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.className = 'zenweb-toast';
+            document.body.appendChild(toast);
+        }
+
+        toast.textContent = message;
+        toast.classList.add('show');
+
+        if (this.toastTimeout) clearTimeout(this.toastTimeout);
+        this.toastTimeout = setTimeout(() => {
+            toast.classList.remove('show');
+        }, 2000);
     }
 }
 

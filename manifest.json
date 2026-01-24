@@ -7,7 +7,11 @@
     "activeTab",
     "scripting",
     "storage",
-    "sidePanel"
+    "sidePanel",
+    "contextMenus"
+  ],
+  "host_permissions": [
+    "<all_urls>"
   ],
   "action": {
     "default_title": "Open ZenWeb Side Panel",
@@ -29,7 +33,6 @@
         "<all_urls>"
       ],
       "js": [
-        "lib/Readability.js",
         "modules/theme.js",
         "modules/speech.js",
         "modules/ai.js",

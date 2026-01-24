@@ -739,3 +739,130 @@ input:checked+.slider:before {
         font-size: 20px;
     }
 }
+
+/* Chat Section */
+.chat-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-messages {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--radius-md);
+    padding: 12px;
+    min-height: 120px;
+    max-height: 200px;
+    overflow-y: auto;
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.chat-welcome {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-tertiary);
+    gap: 8px;
+    padding: 20px 0;
+    text-align: center;
+}
+
+.chat-welcome .icon {
+    font-size: 24px;
+    opacity: 0.5;
+}
+
+.chat-bubble {
+    max-width: 85%;
+    padding: 10px 14px;
+    border-radius: 16px;
+    font-size: 13px;
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+.chat-bubble.user {
+    align-self: flex-end;
+    background: var(--primary-gradient);
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+
+.chat-bubble.ai {
+    align-self: flex-start;
+    background: #f1f5f9;
+    color: var(--text-primary);
+    border-bottom-left-radius: 4px;
+}
+
+.chat-bubble.loading {
+    background: #f1f5f9;
+    color: var(--text-tertiary);
+    font-style: italic;
+}
+
+.chat-input-area {
+    display: flex;
+    gap: 8px;
+}
+
+.chat-input-area input {
+    flex: 1;
+    padding: 12px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 99px;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.chat-input-area input:focus {
+    border-color: #6366f1;
+}
+
+.send-btn {
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 50%;
+    background: var(--primary-gradient);
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--trans-fast);
+    box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+}
+
+.send-btn:hover {
+    transform: scale(1.05);
+}
+
+.send-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Dark theme chat */
+body.theme-dark .chat-messages {
+    background: rgba(15, 23, 42, 0.5);
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+body.theme-dark .chat-bubble.ai {
+    background: rgba(30, 41, 59, 0.8);
+    color: var(--text-primary);
+}
+
+body.theme-dark .chat-input-area input {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
