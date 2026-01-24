@@ -6,15 +6,19 @@
   "permissions": [
     "activeTab",
     "scripting",
-    "storage"
+    "storage",
+    "sidePanel"
   ],
   "action": {
-    "default_popup": "popup.html",
+    "default_title": "Open ZenWeb Side Panel",
     "default_icon": {
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",
       "128": "icons/icon128.png"
     }
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
   },
   "background": {
     "service_worker": "background.js"
@@ -26,10 +30,16 @@
       ],
       "js": [
         "lib/Readability.js",
+        "modules/theme.js",
+        "modules/speech.js",
+        "modules/ai.js",
+        "modules/reader.js",
+        "modules/focus.js",
         "content.js"
       ],
       "css": [
-        "styles.css"
+        "styles.css",
+        "soft_simplify.css"
       ]
     }
   ],

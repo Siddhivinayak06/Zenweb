@@ -372,3 +372,137 @@ body.context-aware-theme-dark.context-aware-focus textarea {
 .context-aware-toast.show {
     opacity: 1;
 }
+
+/* Focus Timer Widget */
+.zenweb-timer-widget {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(15, 23, 42, 0.9);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 10px 16px;
+    border-radius: 99px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 2147483647;
+    color: white;
+    font-family: 'Inter', system-ui, sans-serif;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+    animation: slideInRight 0.4s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.timer-display {
+    font-size: 16px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.05em;
+    color: #60a5fa;
+    /* Blue-400 */
+}
+
+.timer-controls {
+    display: flex;
+    gap: 6px;
+}
+
+.timer-controls button {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    cursor: pointer;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #cbd5e1;
+    font-size: 12px;
+    transition: all 0.2s;
+}
+
+.timer-controls button:hover {
+    background: #3b82f6;
+    color: white;
+    transform: scale(1.1);
+}
+
+/* Reading Guide (Ruler) */
+.zenweb-reading-guide {
+    position: fixed;
+    left: 0;
+    width: 100vw;
+    height: 48px;
+    /* Approx 3 lines height */
+    background: rgba(255, 235, 59, 0.05);
+    /* Subtle yellow tint */
+    border-top: 1px solid rgba(255, 215, 0, 0.3);
+    border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+    pointer-events: none;
+    z-index: 9997;
+    transform: translateY(-50%);
+    display: none;
+}
+
+body.context-aware-focus .zenweb-reading-guide {
+    display: block;
+}
+
+/* Intelligent Paragraph Highlight */
+.focus-mode-highlight {
+    position: relative;
+    z-index: 9999;
+    color: #cbd5e1 !important;
+    /* light text for dark overlay */
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    box-shadow: 0 0 0 10px rgba(0, 0, 0, 0.5), 0 0 50px rgba(0, 0, 0, 0.8);
+    /* Dim surroundings hack */
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+/* Make highlighted text readable on dark overlay */
+body.context-aware-focus .focus-mode-highlight {
+    text-shadow: 0 1px 2px black;
+}
+
+/* Timer Presets */
+.timer-presets {
+    display: flex;
+    gap: 4px;
+    margin-left: 8px;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    padding-left: 8px;
+}
+
+.timer-presets button {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.timer-presets button:hover,
+.timer-presets button.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-color: #60a5fa;
+}

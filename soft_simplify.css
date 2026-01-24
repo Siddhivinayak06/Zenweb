@@ -1,0 +1,27 @@
+/* Soft Simplify Mode (Aggregators) */
+body.context-aware-simplify-soft nav,
+body.context-aware-simplify-soft aside,
+body.context-aware-simplify-soft header,
+body.context-aware-simplify-soft footer,
+body.context-aware-simplify-soft .ad-container,
+body.context-aware-simplify-soft .ads,
+body.context-aware-simplify-soft [role="banner"],
+body.context-aware-simplify-soft [role="navigation"],
+body.context-aware-simplify-soft [aria-label*="ads"],
+body.context-aware-simplify-soft iframe {
+    display: none !important;
+}
+
+/* Ensure main content is centered */
+body.context-aware-simplify-soft main,
+body.context-aware-simplify-soft [role="main"] {
+    max-width: 900px !important;
+    margin: 0 auto !important;
+    display: block !important;
+}
+
+/* Google News Specific */
+body.context-aware-simplify-soft c-wiz[role="navigation"],
+body.context-aware-simplify-soft header {
+    display: none !important;
+}

@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>ZenWeb</title>
-  <link rel="stylesheet" href="popup.css">
+  <link rel="stylesheet" href="sidepanel.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -24,7 +24,29 @@
         <span class="status-dot"></span>
         <span class="status-text">Connecting...</span>
       </div>
+      <button id="btn-settings" class="settings-btn" aria-label="Settings">⚙️</button>
     </header>
+
+    <!-- Settings Panel (Hidden by default) -->
+    <div id="settings-panel" class="settings-panel hidden">
+      <div class="settings-header">
+        <h2>Settings</h2>
+        <button id="btn-close-settings" class="close-btn">×</button>
+      </div>
+      <div class="settings-content">
+        <label for="api-key-input">Gemini API Key</label>
+        <input type="password" id="api-key-input" placeholder="Paste your API key here">
+
+        <label for="voice-select">Reading Voice</label>
+        <select id="voice-select" class="settings-select">
+          <option value="auto">Auto (Best Match)</option>
+        </select>
+
+        <p class="help-text">Required for cloud-based AI summaries.</p>
+        <button id="btn-save-settings" class="action-btn">Save Key</button>
+        <div id="settings-status" class="status-msg"></div>
+      </div>
+    </div>
 
     <div class="glass-panel">
       <!-- Live Stats Area -->
@@ -77,9 +99,13 @@
         <span class="section-title">AI Summary</span>
         <div id="summary-container" class="summary-box">
           <div class="empty-state">
-            <span class="icon">🤖</span>
+            <span class="icon">✨</span>
             <p>Click 'Generate' to analyze page</p>
           </div>
+        </div>
+        <div class="summary-actions hidden" id="summary-actions">
+          <button id="btn-copy-summary" class="icon-btn" title="Copy Summary">📋</button>
+          <button id="btn-clear-summary" class="icon-btn" title="Clear">🗑️</button>
         </div>
         <button id="btn-summarize" class="action-btn">Generate Summary</button>
       </div>
@@ -88,7 +114,7 @@
     <div id="footer-msg">Ready to help</div>
   </div>
 
-  <script src="popup.js"></script>
+  <script src="sidepanel.js"></script>
 </body>
 
 </html>
