@@ -15,16 +15,16 @@
 
 <body>
   <div class="app-container">
-    <header>
+    <!-- Minimal Header -->
+    <header class="compact-header">
       <div class="logo-area">
         <span class="logo-icon">✨</span>
         <h1>ZenWeb</h1>
       </div>
-      <div id="connection-status" class="status-badge">
-        <span class="status-dot"></span>
-        <span class="status-text">Connecting...</span>
+      <div class="header-actions">
+        <div id="connection-status" class="status-dot-mini" title="Connection Status"></div>
+        <button id="btn-settings" class="icon-btn-small" aria-label="Settings">⚙️</button>
       </div>
-      <button id="btn-settings" class="settings-btn" aria-label="Settings">⚙️</button>
     </header>
 
     <!-- Settings Panel (Hidden by default) -->
@@ -36,96 +36,189 @@
       <div class="settings-content">
         <label for="api-key-input">Gemini API Key</label>
         <input type="password" id="api-key-input" placeholder="Paste your API key here">
-
         <label for="voice-select">Reading Voice</label>
         <select id="voice-select" class="settings-select">
           <option value="auto">Auto (Best Match)</option>
         </select>
-
-        <p class="help-text">Required for cloud-based AI summaries.</p>
-        <button id="btn-save-settings" class="action-btn">Save Key</button>
+        <button id="btn-save-settings" class="action-btn">Save Settings</button>
         <div id="settings-status" class="status-msg"></div>
       </div>
     </div>
 
-    <div class="glass-panel">
-      <!-- Live Stats Area -->
-      <div id="live-stats" class="live-stats hidden">
-        <div class="stat-item">
-          <span class="stat-value" id="distraction-count">0</span>
-          <span class="stat-label">Distractions Hidden</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-value" id="active-mode">None</span>
-          <span class="stat-label">Active Mode</span>
-        </div>
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Quick Actions - Always Visible -->
+      <div class="quick-actions">
+        <button id="btn-simplify" class="quick-btn" data-mode="simplify">
+          <span class="quick-icon">📖</span>
+          <span class="quick-label">Simplify</span>
+        </button>
+        <button id="btn-focus" class="quick-btn" data-mode="focus">
+          <span class="quick-icon">🎯</span>
+          <span class="quick-label">Focus</span>
+        </button>
+        <button id="btn-summarize" class="quick-btn">
+          <span class="quick-icon">✨</span>
+          <span class="quick-label">Summarize</span>
+        </button>
+        <button id="btn-reset" class="quick-btn reset">
+          <span class="quick-icon">↺</span>
+          <span class="quick-label">Reset</span>
+        </button>
       </div>
 
-      <div class="card-section">
-        <span class="section-title">Modes</span>
-        <div class="mode-toggles">
-          <button id="btn-simplify" class="mode-btn" data-mode="simplify" aria-label="Simplify Mode">
-            <span class="icon">📖</span>
-            <span class="label">Simplify</span>
-          </button>
-          <button id="btn-focus" class="mode-btn" data-mode="focus" aria-label="Focus Mode">
-            <span class="icon">🎯</span>
-            <span class="label">Focus</span>
-          </button>
+      <!-- Cognitive Score (Compact) -->
+      <div class="score-strip" id="score-strip">
+        <span class="score-emoji" id="score-emoji">⏳</span>
+        <div class="score-info">
+          <span class="score-value" id="score-value">--</span>
+          <span class="score-label" id="score-label">Page Load Score</span>
         </div>
-        <button id="btn-reset" class="reset-btn">Reset View</button>
+        <button id="btn-refresh-score" class="refresh-btn-mini" title="Refresh">🔄</button>
       </div>
 
-      <div class="card-section">
-        <span class="section-title">Appearance</span>
-        <div class="appearance-controls">
-          <div class="toggle-row">
-            <label for="check-dyslexia">Dyslexia Font</label>
-            <label class="toggle-switch">
-              <input type="checkbox" id="check-dyslexia">
-              <span class="slider"></span>
-            </label>
+      <!-- Collapsible Sections -->
+      <div class="collapsible-sections">
+
+        <!-- Profiles Section -->
+        <details class="section-accordion" open>
+          <summary class="accordion-header">
+            <span class="accordion-icon">👤</span>
+            <span class="accordion-title">Cognitive Profiles</span>
+          </summary>
+          <div class="accordion-content">
+            <div class="profile-grid" id="profile-selector">
+              <button class="profile-chip" data-profile="adhd" title="ADHD Focus">🎯 ADHD</button>
+              <button class="profile-chip" data-profile="dyslexia" title="Dyslexia Friendly">📖 Dyslexia</button>
+              <button class="profile-chip" data-profile="lowVision" title="Low Vision">👁️ Low Vision</button>
+              <button class="profile-chip" data-profile="sensory" title="Sensory Calm">🔇 Sensory</button>
+              <button class="profile-chip" data-profile="custom" title="Custom">⚙️ Custom</button>
+            </div>
+
+            <button id="btn-edit-custom-profile" class="link-btn hidden" style="margin-top: 8px;">✏️ Customize
+              Profile</button>
+
+            <div id="custom-profile-editor" class="custom-profile-editor hidden">
+              <div class="custom-editor-header">
+                <h3>Custom Settings</h3>
+                <button id="btn-close-custom" class="link-btn">Close</button>
+              </div>
+
+              <div class="custom-control-group">
+                <label>Font Size</label>
+                <div class="range-slider-container">
+                  <input type="range" id="custom-font-size" min="10" max="32" step="1" value="16">
+                  <span class="range-value" id="val-font-size">16px</span>
+                </div>
+              </div>
+
+              <div class="custom-control-group">
+                <label>Line Spacing</label>
+                <div class="range-slider-container">
+                  <input type="range" id="custom-line-spacing" min="1.0" max="3.0" step="0.1" value="1.5">
+                  <span class="range-value" id="val-line-spacing">1.5</span>
+                </div>
+              </div>
+
+              <div class="custom-control-group">
+                <label>Word Spacing</label>
+                <div class="range-slider-container">
+                  <input type="range" id="custom-word-spacing" min="0" max="2.0" step="0.1" value="0">
+                  <span class="range-value" id="val-word-spacing">0em</span>
+                </div>
+              </div>
+
+              <div class="custom-control-group">
+                <div class="setting-row">
+                  <span>Dyslexia Font</span>
+                  <label class="toggle-switch small">
+                    <input type="checkbox" id="custom-dyslexia">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <button id="btn-save-custom" class="action-btn">Apply Changes</button>
+            </div>
+            <button id="btn-clear-profile" class="link-btn hidden">Clear Profile</button>
           </div>
+        </details>
 
-          <div class="theme-selector">
-            <button class="theme-btn" data-theme="light" title="Light Theme">☀</button>
-            <button class="theme-btn" data-theme="sepia" title="Sepia Theme">☕</button>
-            <button class="theme-btn" data-theme="dark" title="Dark Theme">☾</button>
+        <!-- Appearance Section -->
+        <details class="section-accordion">
+          <summary class="accordion-header">
+            <span class="accordion-icon">🎨</span>
+            <span class="accordion-title">Appearance</span>
+          </summary>
+          <div class="accordion-content">
+            <div class="setting-row">
+              <span>Dyslexia Font</span>
+              <label class="toggle-switch small">
+                <input type="checkbox" id="check-dyslexia">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="setting-row">
+              <span>Block Ads <span id="ads-hidden-badge" class="badge hidden">0</span></span>
+              <label class="toggle-switch small">
+                <input type="checkbox" id="check-adblocker" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="theme-row">
+              <button class="theme-chip" data-theme="light">☀️ Light</button>
+              <button class="theme-chip" data-theme="sepia">☕ Sepia</button>
+              <button class="theme-chip" data-theme="dark">🌙 Dark</button>
+            </div>
           </div>
-        </div>
-      </div>
+        </details>
 
-      <div class="card-section">
-        <span class="section-title">AI Summary</span>
-        <div id="summary-container" class="summary-box">
-          <div class="empty-state">
-            <span class="icon">✨</span>
-            <p>Click 'Generate' to analyze page</p>
+        <!-- AI Chat Section -->
+        <details class="section-accordion">
+          <summary class="accordion-header">
+            <span class="accordion-icon">💬</span>
+            <span class="accordion-title">Chat with Page</span>
+          </summary>
+          <div class="accordion-content chat-content">
+            <div id="chat-messages" class="chat-messages-compact">
+              <div class="chat-placeholder">Ask anything about this page...</div>
+            </div>
+            <div class="chat-input-row">
+              <input type="text" id="chat-input" placeholder="Type a question..." />
+              <button id="btn-send-chat" class="send-btn-compact">➤</button>
+            </div>
           </div>
-        </div>
-        <div class="summary-actions hidden" id="summary-actions">
-          <button id="btn-copy-summary" class="icon-btn" title="Copy Summary">📋</button>
-          <button id="btn-clear-summary" class="icon-btn" title="Clear">🗑️</button>
-        </div>
-        <button id="btn-summarize" class="action-btn">Generate Summary</button>
-      </div>
+        </details>
 
-      <div class="card-section chat-section">
-        <span class="section-title">Chat with Page</span>
-        <div id="chat-messages" class="chat-messages">
-          <div class="chat-welcome">
-            <span class="icon">💬</span>
-            <p>Ask anything about this page</p>
+        <!-- Summary Section -->
+        <details class="section-accordion" id="summary-section">
+          <summary class="accordion-header">
+            <span class="accordion-icon">📝</span>
+            <span class="accordion-title">AI Summary</span>
+          </summary>
+          <div class="accordion-content">
+            <div id="summary-container" class="summary-compact">
+              <p class="summary-placeholder">Click "Summarize" above to analyze this page</p>
+            </div>
+            <div class="summary-actions hidden" id="summary-actions">
+              <button id="btn-copy-summary" class="action-link">📋 Copy</button>
+              <button id="btn-clear-summary" class="action-link">🗑️ Clear</button>
+            </div>
           </div>
-        </div>
-        <div class="chat-input-area">
-          <input type="text" id="chat-input" placeholder="Ask a question..." />
-          <button id="btn-send-chat" class="send-btn" title="Send">➤</button>
-        </div>
+        </details>
       </div>
-    </div>
+    </main>
 
-    <div id="footer-msg">Ready to help</div>
+    <!-- Footer -->
+    <footer class="compact-footer">
+      <button id="btn-dashboard" class="footer-link">📊 Analytics Dashboard</button>
+    </footer>
+  </div>
+
+  <!-- Hidden elements for status tracking -->
+  <div id="live-stats" class="hidden">
+    <span id="distraction-count">0</span>
+    <span id="active-mode">None</span>
   </div>
 
   <script src="sidepanel.js"></script>

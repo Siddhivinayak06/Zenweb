@@ -281,12 +281,21 @@ body::after {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.85);
-    /* Slightly darker for better focus */
-    z-index: 9998;
+    background: rgba(10, 10, 12, 0.85);
+    /* Lighter default for navigation */
+    z-index: 2147483646 !important;
+    /* Max safe integer - 1 */
     pointer-events: none;
     opacity: 0;
-    transition: opacity 0.4s ease-in-out;
+    transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.4s ease-out;
+    backdrop-filter: blur(2px);
+    /* Subtle blur for depth */
+}
+
+/* Dynamic Spotlight: Pitch black when focusing on content */
+body.context-aware-focus:has(.focus-mode-highlight)::after {
+    background-color: rgba(5, 5, 5, 0.98) !important;
+    backdrop-filter: blur(4px);
 }
 
 body.context-aware-focus::after {
@@ -297,12 +306,11 @@ body.context-aware-focus::after {
 
 body.context-aware-focus input,
 body.context-aware-focus textarea,
-body.context-aware-focus button,
-body.context-aware-focus a,
-body.context-aware-focus [role="button"],
-body.context-aware-focus select {
+body.context-aware-focus select,
+body.context-aware-focus button {
     position: relative;
-    z-index: 9999;
+    z-index: 2147483647 !important;
+    /* Max safe integer */
     box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5), 0 0 20px rgba(59, 130, 246, 0.3);
     /* Cleaner glow */
     background-color: rgba(255, 255, 255, 1);
@@ -310,6 +318,23 @@ body.context-aware-focus select {
     border-radius: 6px;
     outline: none;
     /* Remove default outline as we have custom glow */
+}
+
+/* Specific subtle style for links to avoid disrupting reading */
+body.context-aware-focus a,
+body.context-aware-focus [role="button"] {
+    position: relative;
+    z-index: 2147483647 !important;
+    text-shadow: 0 0 1px rgba(255, 255, 255, 0.5);
+    /* Subtle glow instead of background */
+    color: inherit !important;
+    transition: all 0.2s ease;
+}
+
+body.context-aware-focus a:hover,
+body.context-aware-focus [role="button"]:hover {
+    text-shadow: 0 0 8px rgba(59, 130, 246, 0.8);
+    color: #60a5fa !important;
 }
 
 body.context-aware-focus input:focus,
@@ -378,20 +403,25 @@ body.context-aware-theme-dark.context-aware-focus textarea {
     position: fixed;
     top: 20px;
     right: 20px;
-    background: rgba(15, 23, 42, 0.9);
+    background: rgba(15, 23, 42, 0.95) !important;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
     padding: 10px 16px;
-    border-radius: 99px;
-    display: flex;
-    align-items: center;
+    border-radius: 99px !important;
+    display: flex !important;
+    align-items: center !important;
     gap: 12px;
-    z-index: 2147483647;
-    color: white;
-    font-family: 'Inter', system-ui, sans-serif;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+    z-index: 2147483647 !important;
+    /* Topmost */
+    color: white !important;
+    font-family: 'Inter', system-ui, sans-serif !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2) !important;
     animation: slideInRight 0.4s ease-out;
+    /* Reset potentially conflicting styles */
+    line-height: normal !important;
+    text-align: left !important;
+    box-sizing: border-box !important;
 }
 
 @keyframes slideInRight {
@@ -420,24 +450,31 @@ body.context-aware-theme-dark.context-aware-focus textarea {
     gap: 6px;
 }
 
-.timer-controls button {
-    background: rgba(255, 255, 255, 0.1);
-    border: none;
-    cursor: pointer;
-    border-radius: 50%;
-    width: 28px;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #cbd5e1;
-    font-size: 12px;
-    transition: all 0.2s;
+.timer-controls button,
+.timer-extra-controls button {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid transparent !important;
+    cursor: pointer !important;
+    border-radius: 50% !important;
+    width: 28px !important;
+    height: 28px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #cbd5e1 !important;
+    font-size: 12px !important;
+    transition: all 0.2s !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
 }
 
-.timer-controls button:hover {
-    background: #3b82f6;
-    color: white;
+.timer-controls button:hover,
+.timer-extra-controls button:hover {
+    background: #3b82f6 !important;
+    color: white !important;
     transform: scale(1.1);
 }
 
@@ -448,10 +485,15 @@ body.context-aware-theme-dark.context-aware-focus textarea {
     width: 100vw;
     height: 48px;
     /* Approx 3 lines height */
-    background: rgba(255, 235, 59, 0.05);
-    /* Subtle yellow tint */
-    border-top: 1px solid rgba(255, 215, 0, 0.3);
-    border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+    background: linear-gradient(90deg,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 215, 0, 0.15) 20%,
+            rgba(255, 215, 0, 0.15) 80%,
+            rgba(255, 255, 255, 0) 100%);
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.1);
+    /* Soft glow */
+    border-top: 1px solid rgba(255, 215, 0, 0.2);
+    border-bottom: 1px solid rgba(255, 215, 0, 0.2);
     pointer-events: none;
     z-index: 9997;
     transform: translateY(-50%);
@@ -465,46 +507,78 @@ body.context-aware-focus .zenweb-reading-guide {
 /* Intelligent Paragraph Highlight */
 .focus-mode-highlight {
     position: relative;
-    z-index: 9999;
+    z-index: 2147483647 !important;
     color: #cbd5e1 !important;
     /* light text for dark overlay */
     background-color: rgba(255, 255, 255, 0.05) !important;
-    box-shadow: 0 0 0 10px rgba(0, 0, 0, 0.5), 0 0 50px rgba(0, 0, 0, 0.8);
-    /* Dim surroundings hack */
-    border-radius: 4px;
-    transition: all 0.2s ease;
+    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.05),
+        0 4px 20px rgba(0, 0, 0, 0.5);
+    border-radius: 6px;
+    transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    transform: scale(1.01);
 }
 
 /* Make highlighted text readable on dark overlay */
 body.context-aware-focus .focus-mode-highlight {
-    text-shadow: 0 1px 2px black;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+    color: #e2e8f0 !important;
+}
+
+/* New Controls for Text Size in Timer Widget */
+.timer-extra-controls {
+    display: flex !important;
+    gap: 4px !important;
+    margin-left: 8px !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.1) !important;
+    padding-left: 8px !important;
+    align-items: center !important;
+}
+
+.text-size-btn {
+    border-radius: 4px !important;
+    width: auto !important;
+    padding: 0 6px !important;
+    font-size: 11px !important;
+}
+
+.text-size-btn:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.line-focus-btn {
+    font-size: 12px;
+    margin-left: 4px;
 }
 
 /* Timer Presets */
 .timer-presets {
-    display: flex;
-    gap: 4px;
-    margin-left: 8px;
-    border-left: 1px solid rgba(255, 255, 255, 0.1);
-    padding-left: 8px;
+    display: flex !important;
+    gap: 4px !important;
+    margin-left: 8px !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.1) !important;
+    padding-left: 8px !important;
 }
 
 .timer-presets button {
-    background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: rgba(255, 255, 255, 0.6);
-    cursor: pointer;
-    font-size: 10px;
-    padding: 2px 6px;
-    border-radius: 4px;
-    transition: all 0.2s;
+    background: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: rgba(255, 255, 255, 0.6) !important;
+    cursor: pointer !important;
+    font-size: 10px !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
+    transition: all 0.2s !important;
+    width: auto !important;
+    height: auto !important;
+    box-shadow: none !important;
 }
 
 .timer-presets button:hover,
 .timer-presets button.active {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    border-color: #60a5fa;
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: white !important;
+    border-color: #60a5fa !important;
 }
 
 /* Toast Notification */
@@ -532,4 +606,172 @@ body.context-aware-focus .focus-mode-highlight {
 .zenweb-toast.show {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
+}
+
+/* =====================================================
+   COGNITIVE PROFILE STYLES
+   Profile-based accessibility enhancements
+   ===================================================== */
+
+/* CSS Custom Properties for Profile Settings */
+:root {
+    --zenweb-font-size: 16px;
+    --zenweb-line-height: 1.5;
+    --zenweb-letter-spacing: 0;
+    --zenweb-word-spacing: 0;
+}
+
+/* Apply profile-based typography */
+body[style*="--zenweb-font-size"] p,
+body[style*="--zenweb-font-size"] li,
+body[style*="--zenweb-font-size"] span,
+body[style*="--zenweb-font-size"] div {
+    font-size: var(--zenweb-font-size) !important;
+    line-height: var(--zenweb-line-height) !important;
+    letter-spacing: var(--zenweb-letter-spacing) !important;
+    word-spacing: var(--zenweb-word-spacing) !important;
+}
+
+/* Dyslexia-Friendly Font (Profile-based) */
+body.zenweb-dyslexia-font,
+body.zenweb-dyslexia-font * {
+    font-family: 'OpenDyslexic', 'Comic Sans MS', 'Verdana', sans-serif !important;
+    line-height: 1.8 !important;
+    letter-spacing: 0.1em !important;
+    word-spacing: 0.15em !important;
+}
+
+/* High Contrast Mode */
+body.zenweb-high-contrast {
+    filter: contrast(1.3) !important;
+}
+
+body.zenweb-high-contrast p,
+body.zenweb-high-contrast span,
+body.zenweb-high-contrast div,
+body.zenweb-high-contrast li {
+    color: #000 !important;
+    background-color: #fff !important;
+}
+
+body.zenweb-high-contrast a {
+    color: #0000EE !important;
+    text-decoration: underline !important;
+}
+
+body.zenweb-high-contrast img {
+    filter: contrast(1.2) !important;
+}
+
+/* Muted Colors Mode (Sensory) */
+body.zenweb-muted-colors {
+    filter: saturate(0.5) !important;
+}
+
+body.zenweb-muted-colors * {
+    transition: none !important;
+    animation: none !important;
+}
+
+/* No Animations Mode */
+body.zenweb-no-animations,
+body.zenweb-no-animations * {
+    animation: none !important;
+    transition: none !important;
+}
+
+body.zenweb-no-animations *::before,
+body.zenweb-no-animations *::after {
+    animation: none !important;
+    transition: none !important;
+}
+
+/* Auto-hide GIFs and videos when animations disabled */
+body.zenweb-no-animations img[src$=".gif"],
+body.zenweb-no-animations video[autoplay] {
+    opacity: 0.3;
+    filter: grayscale(1);
+}
+
+/* Bold Text Mode */
+body.zenweb-bold-text p,
+body.zenweb-bold-text span,
+body.zenweb-bold-text li,
+body.zenweb-bold-text div {
+    font-weight: 600 !important;
+}
+
+body.zenweb-bold-text a {
+    font-weight: 700 !important;
+}
+
+/* Large Cursor Mode */
+body.zenweb-large-cursor,
+body.zenweb-large-cursor * {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M5 3l22 10-10 3-3 10z' fill='%23000' stroke='%23fff' stroke-width='2'/%3E%3C/svg%3E") 0 0, auto !important;
+}
+
+body.zenweb-large-cursor a,
+body.zenweb-large-cursor button,
+body.zenweb-large-cursor [role="button"],
+body.zenweb-large-cursor input[type="submit"] {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M10 6v20l4-4h10l-14-16z' fill='%23000' stroke='%23fff' stroke-width='2'/%3E%3C/svg%3E") 6 0, pointer !important;
+}
+
+/* Profile Active Indicator */
+body[data-zenweb-profile]::before {
+    content: attr(data-zenweb-profile);
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    background: rgba(99, 102, 241, 0.9);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: -apple-system, sans-serif;
+    z-index: 2147483640;
+    opacity: 0;
+    transform: translateX(-10px);
+    transition: all 0.3s ease;
+    pointer-events: none;
+}
+
+body[data-zenweb-profile]:hover::before {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Reduce Clutter Mode - Hide distracting elements */
+body.zenweb-reduce-clutter [class*="sidebar"],
+body.zenweb-reduce-clutter [class*="aside"],
+body.zenweb-reduce-clutter [class*="ad-"],
+body.zenweb-reduce-clutter [class*="_ad"],
+body.zenweb-reduce-clutter [id*="ad-"],
+body.zenweb-reduce-clutter [class*="banner"],
+body.zenweb-reduce-clutter [class*="popup"],
+body.zenweb-reduce-clutter [class*="modal"],
+body.zenweb-reduce-clutter [class*="newsletter"],
+body.zenweb-reduce-clutter [class*="subscribe"],
+body.zenweb-reduce-clutter [class*="social"],
+body.zenweb-reduce-clutter [class*="share"],
+body.zenweb-reduce-clutter [class*="related"],
+body.zenweb-reduce-clutter [class*="recommend"],
+body.zenweb-reduce-clutter [role="complementary"],
+body.zenweb-reduce-clutter aside,
+body.zenweb-reduce-clutter .ad-container,
+body.zenweb-reduce-clutter iframe[src*="doubleclick"],
+body.zenweb-reduce-clutter iframe[src*="ads"] {
+    opacity: 0.05 !important;
+    pointer-events: none !important;
+    filter: grayscale(1) blur(2px) !important;
+    transition: all 0.5s ease;
+}
+
+body.zenweb-reduce-clutter [class*="header"],
+body.zenweb-reduce-clutter [class*="menu"],
+body.zenweb-reduce-clutter [class*="nav"] {
+    opacity: 0.8;
+    /* Dim navigation but keep usable */
 }

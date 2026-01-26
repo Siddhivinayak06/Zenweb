@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "ZenWeb Browser Assistant",
-  "version": "1.0",
-  "description": "Reduces cognitive load by simplifying web pages and highlighting essential content.",
+  "version": "2.0",
+  "description": "Reduces cognitive load with adaptive profiles, page analysis, and focus tools. Simplify pages, track cognitive scores, and boost productivity.",
   "permissions": [
     "activeTab",
     "scripting",
@@ -33,6 +33,10 @@
         "<all_urls>"
       ],
       "js": [
+        "modules/profiles.js",
+        "modules/cognitive-scorer.js",
+        "modules/analytics.js",
+        "modules/adblocker.js",
         "modules/theme.js",
         "modules/speech.js",
         "modules/ai.js",

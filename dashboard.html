@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenWeb Analytics Dashboard</title>
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-left">
+                <span class="logo-icon">✨</span>
+                <h1>ZenWeb Analytics</h1>
+            </div>
+            <div class="header-right">
+                <select id="time-range" class="time-select">
+                    <option value="7">Last 7 Days</option>
+                    <option value="14">Last 14 Days</option>
+                    <option value="30">Last 30 Days</option>
+                </select>
+                <button id="btn-export" class="btn-secondary">📥 Export Data</button>
+                <button id="btn-refresh" class="btn-primary">🔄 Refresh</button>
+            </div>
+        </header>
+
+        <!-- Stats Overview -->
+        <section class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-content">
+                    <span class="stat-value" id="stat-sessions">0</span>
+                    <span class="stat-label">Total Sessions</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🎯</div>
+                <div class="stat-content">
+                    <span class="stat-value" id="stat-focus-time">0</span>
+                    <span class="stat-label">Focus Minutes</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🧠</div>
+                <div class="stat-content">
+                    <span class="stat-value" id="stat-avg-cognitive">0</span>
+                    <span class="stat-label">Avg. Cognitive Load</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-content">
+                    <span class="stat-value" id="stat-completion">0%</span>
+                    <span class="stat-label">Focus Completion</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts Row 1 -->
+        <section class="charts-row">
+            <div class="chart-card wide">
+                <h3>Daily Activity</h3>
+                <canvas id="chart-activity"></canvas>
+            </div>
+        </section>
+
+        <!-- Charts Row 2 -->
+        <section class="charts-row">
+            <div class="chart-card">
+                <h3>Mode Usage</h3>
+                <canvas id="chart-modes"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>Profile Usage</h3>
+                <canvas id="chart-profiles"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>AI Features</h3>
+                <canvas id="chart-ai"></canvas>
+            </div>
+        </section>
+
+        <!-- Bottom Section -->
+        <section class="bottom-row">
+            <div class="chart-card">
+                <h3>Cognitive Load Distribution</h3>
+                <canvas id="chart-cognitive"></canvas>
+            </div>
+            <div class="list-card">
+                <h3>Top Sites</h3>
+                <ul id="top-sites" class="site-list">
+                    <li class="empty-state">No data yet</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Privacy Notice -->
+        <footer class="dashboard-footer">
+            <p>📊 All analytics data is stored locally on your device. <button id="btn-clear" class="link-btn">Clear All
+                    Data</button></p>
+        </footer>
+    </div>
+
+    <script src="dashboard.js"></script>
+</body>
+
+</html>

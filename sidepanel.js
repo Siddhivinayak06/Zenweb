@@ -1,20 +1,18 @@
+/**
+ * ZenWeb Sidepanel - Simplified Controller
+ */
 document.addEventListener('DOMContentLoaded', () => {
+  // Quick Action Buttons
   const btnSimplify = document.getElementById('btn-simplify');
   const btnFocus = document.getElementById('btn-focus');
   const btnReset = document.getElementById('btn-reset');
   const btnSummarize = document.getElementById('btn-summarize');
-  const summaryContainer = document.getElementById('summary-container');
 
   // Status Elements
   const connectionStatus = document.getElementById('connection-status');
-  const statusText = connectionStatus.querySelector('.status-text');
   const liveStats = document.getElementById('live-stats');
   const distractionCount = document.getElementById('distraction-count');
   const activeMode = document.getElementById('active-mode');
-
-  // Load current state
-  const checkDyslexia = document.getElementById('check-dyslexia');
-  const themeBtns = document.querySelectorAll('.theme-btn');
 
   // Settings Elements
   const btnSettings = document.getElementById('btn-settings');
@@ -24,349 +22,527 @@ document.addEventListener('DOMContentLoaded', () => {
   const apiKeyInput = document.getElementById('api-key-input');
   const settingsStatus = document.getElementById('settings-status');
 
-  // Load API Key
-  chrome.storage.sync.get(['geminiApiKey'], (result) => {
-    if (result.geminiApiKey) {
-      apiKeyInput.value = result.geminiApiKey;
-    }
-  });
+  // Profile Elements
+  const profileChips = document.querySelectorAll('.profile-chip');
+  const btnClearProfile = document.getElementById('btn-clear-profile');
 
-  // Track the active tab ID to ensure UI reflects the correct content
+  // Appearance Elements
+  const checkDyslexia = document.getElementById('check-dyslexia');
+  const checkAdBlocker = document.getElementById('check-adblocker');
+  const adsHiddenBadge = document.getElementById('ads-hidden-badge');
+  const themeChips = document.querySelectorAll('.theme-chip');
+
+  // Score Elements
+  const scoreStrip = document.getElementById('score-strip');
+  const scoreEmoji = document.getElementById('score-emoji');
+  const scoreValue = document.getElementById('score-value');
+  const scoreLabel = document.getElementById('score-label');
+  const btnRefreshScore = document.getElementById('btn-refresh-score');
+
+  // Summary Elements
+  const summaryContainer = document.getElementById('summary-container');
+  const summarySection = document.getElementById('summary-section');
+  const summaryActions = document.getElementById('summary-actions');
+  const btnCopySummary = document.getElementById('btn-copy-summary');
+  const btnClearSummary = document.getElementById('btn-clear-summary');
+
+  // Chat Elements
+  const chatMessages = document.getElementById('chat-messages');
+  const chatInput = document.getElementById('chat-input');
+  const btnSendChat = document.getElementById('btn-send-chat');
+
+  // Dashboard
+  const btnDashboard = document.getElementById('btn-dashboard');
+
+  // State
   let currentTabId = null;
+  let currentActiveProfile = null;
+
+  // ========================================
+  // INITIALIZATION
+  // ========================================
+
+  async function init() {
+    await updateActiveTab();
+    loadPreferences();
+    setInterval(refreshStatus, 2000);
+  }
 
   async function updateActiveTab() {
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
     if (tabs.length > 0) {
       currentTabId = tabs[0].id;
-      refreshStatus();
-    }
-  }
+      const url = tabs[0].url || '';
+      const isRestricted = url.startsWith('chrome://') ||
+        url.startsWith('edge://') ||
+        url.startsWith('chrome-extension://') ||
+        url.startsWith('about:') || url === '';
 
-  // Listen for tab switches to update UI context
-  chrome.tabs.onActivated.addListener(updateActiveTab);
-  chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-    if (tabId === currentTabId && changeInfo.status === 'complete') {
-      refreshStatus();
-    }
-  });
-
-  // Initial Data Load (Global prefs)
-  chrome.storage.local.get(['dyslexiaFont', 'theme'], (result) => {
-    // Explicitly set checked state
-    checkDyslexia.checked = !!result.dyslexiaFont;
-    const currentTheme = result.theme || 'light';
-    updateThemeUI(currentTheme);
-  });
-
-  // Listen for storage changes (Sync across contexts)
-  chrome.storage.onChanged.addListener((changes, namespace) => {
-    if (namespace === 'local') {
-      if (changes.theme) {
-        updateThemeUI(changes.theme.newValue);
-      }
-      if (changes.dyslexiaFont) {
-        checkDyslexia.checked = !!changes.dyslexiaFont.newValue;
-      }
-    }
-  });
-
-  // Real-time Status Check
-  updateActiveTab();
-  setInterval(refreshStatus, 1000); // Poll every 1s
-
-  function refreshStatus() {
-    if (!currentTabId) return;
-
-    chrome.tabs.sendMessage(currentTabId, { action: 'get_status' }, (response) => {
-      // Suppress error on pages where content script can't run
-      if (chrome.runtime.lastError) {
+      if (isRestricted) {
         connectionStatus.classList.remove('connected');
-        statusText.textContent = "Disconnected";
-        liveStats.classList.add('hidden');
-        // Disable controls if disconnected?
+        updateScoreUI({ restricted: true });
         return;
       }
 
-      // Update Connection UI
       connectionStatus.classList.add('connected');
-      statusText.textContent = "Active";
+      refreshStatus();
+      loadCognitiveScore();
+    }
+  }
 
-      // Update Stats
-      if (response.mode !== 'none') {
-        liveStats.classList.remove('hidden');
-        if (distractionCount.innerText != response.hiddenCount) {
-          distractionCount.innerText = response.hiddenCount;
-        }
-        activeMode.innerText = response.mode.charAt(0).toUpperCase() + response.mode.slice(1);
-      } else {
-        liveStats.classList.add('hidden');
-      }
+  function loadPreferences() {
+    // Load API Key
+    chrome.storage.sync.get(['geminiApiKey'], (result) => {
+      if (result.geminiApiKey) apiKeyInput.value = result.geminiApiKey;
+    });
 
-      // Sync Mode UI
-      updateModeUI(response.mode);
+    // Load profile
+    chrome.storage.sync.get(['activeProfile'], (result) => {
+      currentActiveProfile = result.activeProfile || null;
+      updateProfileUI(currentActiveProfile);
+    });
+
+    // Load dyslexia font
+    chrome.storage.local.get(['dyslexiaFont', 'theme', 'adBlockerEnabled'], (result) => {
+      if (checkDyslexia) checkDyslexia.checked = !!result.dyslexiaFont;
+      if (checkAdBlocker) checkAdBlocker.checked = result.adBlockerEnabled !== false;
+      updateThemeUI(result.theme || 'light');
     });
   }
 
-  function updateModeUI(mode) {
-    btnSimplify.classList.remove('active');
-    btnFocus.classList.remove('active');
-    if (mode === 'simplify') btnSimplify.classList.add('active');
-    if (mode === 'focus') btnFocus.classList.add('active');
-  }
+  // ========================================
+  // MESSAGING
+  // ========================================
 
-  function updateThemeUI(theme) {
-    document.body.classList.remove('theme-light', 'theme-sepia', 'theme-dark');
-    document.body.classList.add(`theme-${theme}`);
-
-    themeBtns.forEach(btn => {
-      if (btn.dataset.theme === theme) {
-        btn.classList.add('active');
-      } else {
-        btn.classList.remove('active');
-      }
-    });
-  }
-
-  // Event Listeners
-  if (checkDyslexia) {
-    checkDyslexia.addEventListener('change', (e) => {
-      const isEnabled = e.target.checked;
-      chrome.storage.local.set({ dyslexiaFont: isEnabled });
-      sendMessageToCurrentTab(isEnabled ? 'enable_dyslexia' : 'disable_dyslexia');
-    });
-  }
-
-  if (themeBtns) {
-    themeBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const theme = btn.dataset.theme;
-        updateThemeUI(theme);
-        chrome.storage.local.set({ theme: theme });
-        sendMessageToCurrentTab(`set_theme_${theme}`);
-      });
-    });
-  }
-
-  function sendMessageToCurrentTab(action, callback) {
+  function sendMessage(action, data = {}, callback) {
     if (!currentTabId) return;
-    chrome.tabs.sendMessage(currentTabId, { action: action }, (response) => {
+    chrome.tabs.sendMessage(currentTabId, { action, ...data }, (response) => {
       if (chrome.runtime.lastError) {
-        // Ignore errors on restricted pages
-        console.log('ZenWeb: Tab not available for messaging');
+        console.log('ZenWeb: Message error -', chrome.runtime.lastError.message);
         return;
       }
       if (callback) callback(response);
     });
   }
 
-  btnSimplify.addEventListener('click', () => {
-    const isActive = btnSimplify.classList.contains('active');
-    const newMode = isActive ? 'none' : 'simplify';
-    setMode(newMode);
-  });
+  // ========================================
+  // STATUS REFRESH
+  // ========================================
 
-  btnFocus.addEventListener('click', () => {
-    const isActive = btnFocus.classList.contains('active');
-    const newMode = isActive ? 'none' : 'focus';
-    setMode(newMode);
-  });
+  function refreshStatus() {
+    sendMessage('get_status', {}, (response) => {
+      if (!response) return;
 
-  btnReset.addEventListener('click', () => {
-    setMode('none');
-  });
+      // Update mode UI
+      updateModeUI(response.mode);
 
-  function setMode(mode) {
-    // We don't store 'mode' globally in storage anymore for the UI state, 
-    // we rely on the injected script state.
-    // chrome.storage.local.set({ mode: mode }); 
-    updateModeUI(mode);
-
-    let action = 'reset';
-    if (mode === 'simplify') action = 'enable_simplify';
-    if (mode === 'focus') action = 'enable_focus';
-
-    sendMessageToCurrentTab(action, () => {
-      setTimeout(refreshStatus, 50);
-    });
-  }
-
-  btnSummarize.addEventListener('click', () => {
-    summaryContainer.innerHTML = '<div class="empty-state"><p>Analyzing...</p></div>';
-    sendMessageToCurrentTab('summarize', (response) => {
-      if (chrome.runtime.lastError || !response || !response.summary) {
-        summaryContainer.innerHTML = '<div class="empty-state"><p>Analysis failed.</p></div>';
-        return;
-      }
-      // Handle array or string
-      let summaryHtml = '';
-      if (Array.isArray(response.summary)) {
-        summaryHtml = `<ul>${response.summary.map(s => `<li>${s}</li>`).join('')}</ul>`;
-      } else {
-        summaryHtml = `<p>${response.summary}</p>`;
-      }
-      summaryContainer.innerHTML = summaryHtml;
-
-      // Show actions
-      const actions = document.getElementById('summary-actions');
-      if (actions) actions.classList.remove('hidden');
-
-      // chrome.storage.local.set({ summary: summaryHtml }); // Don't persist summary globally for side panel, it's per page
-    });
-  });
-
-  const btnCopy = document.getElementById('btn-copy-summary');
-  const btnClear = document.getElementById('btn-clear-summary');
-
-  if (btnCopy) {
-    btnCopy.addEventListener('click', () => {
-      const text = summaryContainer.innerText;
-      navigator.clipboard.writeText(text).then(() => {
-        const original = btnCopy.innerText;
-        btnCopy.innerText = '✅';
-        setTimeout(() => btnCopy.innerText = original, 1500);
+      // Update ad blocker status
+      sendMessage('get_adblocker_status', {}, (adResponse) => {
+        if (adResponse) {
+          if (checkAdBlocker) checkAdBlocker.checked = adResponse.enabled;
+          if (adResponse.enabled && adResponse.hiddenCount > 0) {
+            adsHiddenBadge.textContent = adResponse.hiddenCount;
+            adsHiddenBadge.classList.remove('hidden');
+          } else {
+            adsHiddenBadge.classList.add('hidden');
+          }
+        }
       });
     });
   }
 
-  if (btnClear) {
-    btnClear.addEventListener('click', () => {
-      summaryContainer.innerHTML = '<div class="empty-state"><span class="icon">✨</span><p>Click \'Generate\' to analyze page</p></div>';
-      document.getElementById('summary-actions').classList.add('hidden');
-    });
+  function updateModeUI(mode) {
+    btnSimplify.classList.toggle('active', mode === 'simplify');
+    btnFocus.classList.toggle('active', mode === 'focus');
   }
 
-  // Settings Logic
-  btnSettings.addEventListener('click', () => {
-    settingsPanel.classList.remove('hidden');
-    loadVoices(); // Refresh voices when opening settings
+  // ========================================
+  // COGNITIVE SCORE
+  // ========================================
+
+  function loadCognitiveScore() {
+    sendMessage('get_cognitive_score', {}, updateScoreUI);
+  }
+
+  function updateScoreUI(data) {
+    if (!data || data.restricted) {
+      scoreEmoji.textContent = '🚫';
+      scoreValue.textContent = 'N/A';
+      scoreLabel.textContent = 'Not available';
+      scoreStrip.className = 'score-strip';
+      return;
+    }
+
+    if (!data.score && data.score !== 0) {
+      scoreEmoji.textContent = '⏳';
+      scoreValue.textContent = '--';
+      scoreLabel.textContent = 'Calculating...';
+      scoreStrip.className = 'score-strip';
+      return;
+    }
+
+    const { score, level } = data;
+    scoreEmoji.textContent = level?.emoji || '📊';
+    scoreValue.textContent = score;
+    scoreLabel.textContent = level?.label || 'Page Load Score';
+    scoreStrip.className = `score-strip ${level?.level || ''}`;
+  }
+
+  btnRefreshScore?.addEventListener('click', () => {
+    scoreEmoji.textContent = '⏳';
+    scoreValue.textContent = '...';
+    sendMessage('recalculate_cognitive_score', {}, updateScoreUI);
   });
 
-  const voiceSelect = document.getElementById('voice-select');
+  // ========================================
+  // QUICK ACTIONS
+  // ========================================
 
-  function loadVoices() {
-    const voices = window.speechSynthesis.getVoices();
+  btnSimplify?.addEventListener('click', () => {
+    sendMessage('toggle_simplify', {}, () => refreshStatus());
+  });
 
-    // Clear existing (except Auto)
-    voiceSelect.innerHTML = '<option value="auto">Auto (Best Match)</option>';
+  btnFocus?.addEventListener('click', () => {
+    sendMessage('toggle_focus', {}, () => refreshStatus());
+  });
 
-    // Filter for English or relevant voices and sort
-    const relevantVoices = voices.filter(v => v.lang.startsWith('en')).sort((a, b) => a.name.localeCompare(b.name));
+  btnReset?.addEventListener('click', () => {
+    sendMessage('reset', {}, () => refreshStatus());
+  });
 
-    relevantVoices.forEach(voice => {
-      const option = document.createElement('option');
-      option.value = voice.name;
-      option.textContent = `${voice.name} (${voice.lang})`;
-      voiceSelect.appendChild(option);
+  // ========================================
+  // PROFILES
+  // ========================================
+
+  function updateProfileUI(profileId) {
+    profileChips.forEach(chip => {
+      chip.classList.toggle('active', chip.dataset.profile === profileId);
     });
+    btnClearProfile?.classList.toggle('hidden', !profileId);
 
-    // Restore selection
-    chrome.storage.local.get(['preferredVoice'], (result) => {
-      if (result.preferredVoice) {
-        voiceSelect.value = result.preferredVoice;
+    // Show/Hide Edit Custom button
+    if (profileId === 'custom') {
+      btnEditCustom?.classList.remove('hidden');
+    } else {
+      btnEditCustom?.classList.add('hidden');
+      customEditor?.classList.add('hidden');
+    }
+  }
+
+  profileChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      const profileId = chip.dataset.profile;
+      if (profileId === currentActiveProfile) {
+        clearProfile();
+      } else {
+        setProfile(profileId);
       }
     });
-  }
-
-  // Handle Chrome's async voice loading
-  if (window.speechSynthesis.onvoiceschanged !== undefined) {
-    window.speechSynthesis.onvoiceschanged = loadVoices;
-  }
-
-  voiceSelect.addEventListener('change', () => {
-    const selectedVoice = voiceSelect.value;
-    chrome.storage.local.set({ preferredVoice: selectedVoice });
-    // Optional: Preview voice?
   });
 
-  btnCloseSettings.addEventListener('click', () => {
+  function setProfile(profileId) {
+    sendMessage('set_profile', { profileId }, () => {
+      currentActiveProfile = profileId;
+      updateProfileUI(profileId);
+    });
+  }
+
+  function clearProfile() {
+    sendMessage('clear_profile', {}, () => {
+      currentActiveProfile = null;
+      updateProfileUI(null);
+    });
+  }
+
+  btnClearProfile?.addEventListener('click', clearProfile);
+
+  // ========================================
+  // CUSTOM PROFILE EDITOR LOGIC
+  // ========================================
+  const btnEditCustom = document.getElementById('btn-edit-custom-profile');
+  const customEditor = document.getElementById('custom-profile-editor');
+  const btnCloseCustom = document.getElementById('btn-close-custom');
+  const btnSaveCustom = document.getElementById('btn-save-custom');
+
+  // Controls
+  const inputFontSize = document.getElementById('custom-font-size');
+  const inputLineSpacing = document.getElementById('custom-line-spacing');
+  const inputWordSpacing = document.getElementById('custom-word-spacing');
+  const inputCustomDyslexia = document.getElementById('custom-dyslexia');
+
+  // Value Labels
+  const valFontSize = document.getElementById('val-font-size');
+  const valLineSpacing = document.getElementById('val-line-spacing');
+  const valWordSpacing = document.getElementById('val-word-spacing');
+
+  // Events for Sliders
+  inputFontSize?.addEventListener('input', (e) => valFontSize.textContent = `${e.target.value}px`);
+  inputLineSpacing?.addEventListener('input', (e) => valLineSpacing.textContent = e.target.value);
+  inputWordSpacing?.addEventListener('input', (e) => valWordSpacing.textContent = `${e.target.value}em`);
+
+  btnEditCustom?.addEventListener('click', () => {
+    // Load current settings
+    chrome.storage.sync.get(['customProfileSettings'], (result) => {
+      const settings = result.customProfileSettings || {};
+      if (settings.fontSize) { inputFontSize.value = settings.fontSize; valFontSize.textContent = `${settings.fontSize}px`; }
+      if (settings.lineSpacing) { inputLineSpacing.value = settings.lineSpacing; valLineSpacing.textContent = settings.lineSpacing; }
+      if (settings.wordSpacing) { inputWordSpacing.value = settings.wordSpacing; valWordSpacing.textContent = `${settings.wordSpacing}em`; }
+      if (settings.useDyslexiaFont) { inputCustomDyslexia.checked = settings.useDyslexiaFont; }
+    });
+    customEditor.classList.remove('hidden');
+    btnEditCustom.classList.add('hidden');
+  });
+
+  btnCloseCustom?.addEventListener('click', () => {
+    customEditor.classList.add('hidden');
+    if (currentActiveProfile === 'custom') {
+      btnEditCustom.classList.remove('hidden');
+    }
+  });
+
+  btnSaveCustom?.addEventListener('click', () => {
+    const settings = {
+      fontSize: parseInt(inputFontSize.value),
+      lineSpacing: parseFloat(inputLineSpacing.value),
+      wordSpacing: parseFloat(inputWordSpacing.value),
+      useDyslexiaFont: inputCustomDyslexia.checked
+    };
+
+    sendMessage('update_custom_profile', { settings }, () => {
+      // Visual feedback
+      const originalText = btnSaveCustom.textContent;
+      btnSaveCustom.textContent = '✓ Applied!';
+      btnSaveCustom.style.background = 'var(--success-color)';
+      setTimeout(() => {
+        btnSaveCustom.textContent = originalText;
+        btnSaveCustom.style.background = '';
+        customEditor.classList.add('hidden');
+        btnEditCustom.classList.remove('hidden');
+      }, 1000);
+    });
+  });
+
+
+  // ========================================
+  // APPEARANCE
+  // ========================================
+
+  checkDyslexia?.addEventListener('change', (e) => {
+    const enabled = e.target.checked;
+    chrome.storage.local.set({ dyslexiaFont: enabled });
+    sendMessage(enabled ? 'enable_dyslexia' : 'disable_dyslexia');
+  });
+
+  checkAdBlocker?.addEventListener('change', (e) => {
+    const enabled = e.target.checked;
+    chrome.storage.local.set({ adBlockerEnabled: enabled });
+    sendMessage(enabled ? 'enable_adblocker' : 'disable_adblocker', {}, (response) => {
+      if (response?.hiddenCount > 0) {
+        adsHiddenBadge.textContent = response.hiddenCount;
+        adsHiddenBadge.classList.remove('hidden');
+      } else {
+        adsHiddenBadge.classList.add('hidden');
+      }
+    });
+  });
+
+  function updateThemeUI(theme) {
+    document.body.classList.remove('theme-light', 'theme-sepia', 'theme-dark');
+    document.body.classList.add(`theme-${theme}`);
+    themeChips.forEach(chip => {
+      chip.classList.toggle('active', chip.dataset.theme === theme);
+    });
+  }
+
+  themeChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      const theme = chip.dataset.theme;
+      chrome.storage.local.set({ theme });
+      updateThemeUI(theme);
+      sendMessage(`set_theme_${theme}`);
+    });
+  });
+
+  // ========================================
+  // SETTINGS
+  // ========================================
+
+  btnSettings?.addEventListener('click', () => {
+    settingsPanel.classList.remove('hidden');
+  });
+
+  btnCloseSettings?.addEventListener('click', () => {
     settingsPanel.classList.add('hidden');
   });
 
-  btnSaveSettings.addEventListener('click', () => {
-    const key = apiKeyInput.value.trim();
-    chrome.storage.sync.set({ geminiApiKey: key }, () => {
-      settingsStatus.textContent = "Saved!";
-      setTimeout(() => settingsStatus.textContent = "", 2000);
+  btnSaveSettings?.addEventListener('click', () => {
+    const apiKey = apiKeyInput.value.trim();
+    if (apiKey) {
+      chrome.storage.sync.set({ geminiApiKey: apiKey }, () => {
+        settingsStatus.textContent = '✓ Saved!';
+        settingsStatus.style.color = '#10b981';
+        setTimeout(() => settingsStatus.textContent = '', 2000);
+      });
+    }
+  });
+
+  // ========================================
+  // AI SUMMARY
+  // ========================================
+
+  btnSummarize?.addEventListener('click', async () => {
+    summaryContainer.innerHTML = '<p class="summary-placeholder">⏳ Generating summary...</p>';
+    summarySection.open = true;
+
+    sendMessage('summarize', {}, (response) => {
+      if (!response) {
+        summaryContainer.innerHTML = '<p class="summary-placeholder">❌ Could not generate summary</p>';
+        return;
+      }
+
+      if (response.summary) {
+        summaryContainer.innerHTML = `<div class="summary-text">${formatSummary(response.summary)}</div>`;
+        summaryActions.classList.remove('hidden');
+      } else if (response.error) {
+        summaryContainer.innerHTML = `<p class="summary-placeholder">❌ ${response.error}</p>`;
+      }
     });
   });
 
-  // ========== CHAT WITH PAGE ==========
-  const chatMessages = document.getElementById('chat-messages');
-  const chatInput = document.getElementById('chat-input');
-  const btnSendChat = document.getElementById('btn-send-chat');
-  let pageContext = ''; // Cached page content
-
-  // Get page context on load
-  async function loadPageContext() {
-    if (!currentTabId) return;
-    chrome.tabs.sendMessage(currentTabId, { action: 'get_page_content' }, (response) => {
-      if (response && response.content) {
-        pageContext = response.content;
-      }
-    });
+  function formatSummary(text) {
+    // Convert bullet points to list
+    const lines = text.split('\n').filter(l => l.trim());
+    if (lines.every(l => l.startsWith('-') || l.startsWith('•'))) {
+      return '<ul>' + lines.map(l => `<li>${l.replace(/^[-•]\s*/, '')}</li>`).join('') + '</ul>';
+    }
+    return `<p>${text}</p>`;
   }
 
-  // Chat functions
-  function addChatBubble(text, type) {
-    // Remove welcome message if present
-    const welcome = chatMessages.querySelector('.chat-welcome');
-    if (welcome) welcome.remove();
+  btnCopySummary?.addEventListener('click', () => {
+    const text = summaryContainer.innerText;
+    navigator.clipboard.writeText(text);
+  });
 
-    const bubble = document.createElement('div');
-    bubble.className = `chat-bubble ${type}`;
-    bubble.textContent = text;
-    chatMessages.appendChild(bubble);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-    return bubble;
-  }
+  btnClearSummary?.addEventListener('click', () => {
+    summaryContainer.innerHTML = '<p class="summary-placeholder">Click "Summarize" above to analyze this page</p>';
+    summaryActions.classList.add('hidden');
+  });
 
-  async function sendChatMessage(question) {
-    if (!question.trim()) return;
+  // ========================================
+  // CHAT
+  // ========================================
+
+  async function sendChatMessage() {
+    const question = chatInput.value.trim();
+    if (!question) return;
+
+    // Clear placeholder and add user message
+    if (chatMessages.querySelector('.chat-placeholder')) {
+      chatMessages.innerHTML = '';
+    }
 
     addChatBubble(question, 'user');
     chatInput.value = '';
 
-    const loadingBubble = addChatBubble('Thinking...', 'loading');
+    // Add loading indicator
+    const loadingId = addChatBubble('Thinking...', 'loading');
 
-    // Load page context if not loaded
-    if (!pageContext) await loadPageContext();
+    try {
+      const apiKey = await new Promise(resolve => {
+        chrome.storage.sync.get(['geminiApiKey'], r => resolve(r.geminiApiKey));
+      });
 
-    chrome.runtime.sendMessage({
-      action: 'chat_with_api',
-      question: question,
-      context: pageContext
-    }, (response) => {
-      loadingBubble.remove();
-      if (response.error) {
-        addChatBubble(`Error: ${response.error}`, 'ai');
-      } else {
-        addChatBubble(response.answer, 'ai');
+      if (!apiKey) {
+        removeChatBubble(loadingId);
+        addChatBubble('Please add your Gemini API key in settings.', 'ai');
+        return;
       }
-    });
+
+      // Get page content
+      const pageContent = await new Promise(resolve => {
+        sendMessage('get_page_content', {}, r => resolve(r?.content || ''));
+      });
+
+      // Call Gemini API
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `Based on this webpage content, answer the question concisely.\n\nPage Content:\n${pageContent.substring(0, 8000)}\n\nQuestion: ${question}`
+            }]
+          }]
+        })
+      });
+
+      const data = await response.json();
+      removeChatBubble(loadingId);
+
+      if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
+        addChatBubble(data.candidates[0].content.parts[0].text, 'ai');
+      } else {
+        addChatBubble('Sorry, I couldn\'t generate a response.', 'ai');
+      }
+    } catch (error) {
+      removeChatBubble(loadingId);
+      addChatBubble('Error: ' + error.message, 'ai');
+    }
   }
 
-  btnSendChat.addEventListener('click', () => {
-    sendChatMessage(chatInput.value);
+  function addChatBubble(text, type) {
+    const id = 'bubble-' + Date.now();
+    const bubble = document.createElement('div');
+    bubble.id = id;
+    bubble.className = `chat-bubble ${type}`;
+    bubble.textContent = text;
+    chatMessages.appendChild(bubble);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    return id;
+  }
+
+  function removeChatBubble(id) {
+    document.getElementById(id)?.remove();
+  }
+
+  btnSendChat?.addEventListener('click', sendChatMessage);
+  chatInput?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendChatMessage();
   });
 
-  chatInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      sendChatMessage(chatInput.value);
+  // ========================================
+  // DASHBOARD
+  // ========================================
+
+  btnDashboard?.addEventListener('click', () => {
+    chrome.tabs.create({ url: chrome.runtime.getURL('dashboard.html') });
+  });
+
+  // ========================================
+  // TAB CHANGE LISTENERS
+  // ========================================
+
+  chrome.tabs.onActivated.addListener(updateActiveTab);
+  chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+    if (tabId === currentTabId && changeInfo.status === 'complete') {
+      refreshStatus();
+      loadCognitiveScore();
     }
   });
 
-  // Listen for explain_selection from context menu
-  chrome.runtime.onMessage.addListener((request) => {
-    if (request.action === 'explain_selection') {
-      const question = `Explain this: "${request.text}"`;
-      sendChatMessage(question);
+  chrome.storage.onChanged.addListener((changes, namespace) => {
+    if (namespace === 'sync' && changes.activeProfile) {
+      currentActiveProfile = changes.activeProfile.newValue || null;
+      updateProfileUI(currentActiveProfile);
+    }
+    if (namespace === 'local') {
+      if (changes.theme) updateThemeUI(changes.theme.newValue);
+      if (changes.dyslexiaFont && checkDyslexia) {
+        checkDyslexia.checked = !!changes.dyslexiaFont.newValue;
+      }
     }
   });
 
-  // Load context when tab changes
-  chrome.tabs.onActivated.addListener(() => {
-    updateActiveTab();
-    pageContext = '';
-    loadPageContext();
-  });
+  // Initialize
+  init();
 });
