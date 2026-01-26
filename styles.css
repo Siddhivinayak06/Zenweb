@@ -304,6 +304,43 @@ body.context-aware-focus::after {
     /* Keep clicks passthrough to underlying elements if needed, but visually dimmed */
 }
 
+/* Theme: Light Focus Overlay */
+body.context-aware-focus.context-aware-theme-light::after {
+    background: rgba(255, 255, 255, 0.9) !important;
+}
+
+body.context-aware-focus.context-aware-theme-light:has(.focus-mode-highlight)::after {
+    background-color: rgba(255, 255, 255, 0.98) !important;
+}
+
+/* Ensure text is readable in Light Focus highlight */
+body.context-aware-focus.context-aware-theme-light .focus-mode-highlight {
+    color: #1a1a1a !important;
+    text-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Theme: Sepia Focus Overlay */
+body.context-aware-focus.context-aware-theme-sepia::after {
+    background: rgba(248, 241, 227, 0.9) !important;
+}
+
+body.context-aware-focus.context-aware-theme-sepia:has(.focus-mode-highlight)::after {
+    background-color: rgba(248, 241, 227, 0.98) !important;
+}
+
+/* Ensure text is readable in Sepia Focus highlight */
+body.context-aware-focus.context-aware-theme-sepia .focus-mode-highlight {
+    color: #5f4b32 !important;
+    text-shadow: 0 10px 30px rgba(95, 75, 50, 0.1) !important;
+}
+
+
+/* Theme: Dark Focus Overlay (Default) */
+body.context-aware-focus.context-aware-theme-dark::after {
+    background: rgba(10, 10, 12, 0.9) !important;
+}
+
+
 body.context-aware-focus input,
 body.context-aware-focus textarea,
 body.context-aware-focus select,
@@ -769,9 +806,102 @@ body.zenweb-reduce-clutter iframe[src*="ads"] {
     transition: all 0.5s ease;
 }
 
-body.zenweb-reduce-clutter [class*="header"],
-body.zenweb-reduce-clutter [class*="menu"],
 body.zenweb-reduce-clutter [class*="nav"] {
     opacity: 0.8;
     /* Dim navigation but keep usable */
+}
+
+/* =====================================================
+   GLOBAL THEME SUPPORT (UNIVERSAL)
+   Applies to the entire page in all modes
+   ===================================================== */
+
+/* 
+   The "Nuclear" Option: 
+   Force ALL elements to respect the theme unless they are media or part of our extension.
+   This is necessary for complex sites with deep DOM structures and specific background colors.
+*/
+
+/* --- DARK THEME --- */
+body.context-aware-theme-dark {
+    background-color: #121212 !important;
+    color: #e8eaed !important;
+}
+
+/* Universal Text & Border Color */
+body.context-aware-theme-dark *:not([class*="context-aware"]):not([id*="zenweb"]):not(img):not(video):not(svg):not(iframe) {
+    color: #e8eaed !important;
+    border-color: #3c4043 !important;
+    scrollbar-color: #3c4043 #121212;
+}
+
+/* Universal Background - Force Transparency 
+   This makes every element transparent so the body's #121212 shows through.
+   We exclude media and form inputs that might need their own backgrounds.
+*/
+body.context-aware-theme-dark *:not([class*="context-aware"]):not([id*="zenweb"]):not(img):not(video):not(svg):not(iframe):not(input):not(textarea):not(select):not(button):not([role="button"]) {
+    background-color: transparent !important;
+    background-image: none !important;
+    /* Remove background patterns/gradients */
+    box-shadow: none !important;
+    /* Remove white shadows/glows */
+}
+
+/* Fix Inputs in Dark Mode */
+body.context-aware-theme-dark input,
+body.context-aware-theme-dark textarea,
+body.context-aware-theme-dark select,
+body.context-aware-theme-dark button {
+    background-color: #1f1f1f !important;
+    color: #e8eaed !important;
+    border: 1px solid #3c4043 !important;
+}
+
+/* Fix Links */
+body.context-aware-theme-dark a {
+    color: #8ab4f8 !important;
+    text-decoration-color: rgba(138, 180, 248, 0.4) !important;
+}
+
+body.context-aware-theme-dark a:visited {
+    color: #c58af9 !important;
+}
+
+/* --- SEPIA THEME --- */
+body.context-aware-theme-sepia {
+    background-color: #f8f1e3 !important;
+    color: #4b3e2f !important;
+}
+
+/* Universal Text & Border Color */
+body.context-aware-theme-sepia *:not([class*="context-aware"]):not([id*="zenweb"]):not(img):not(video):not(svg):not(iframe) {
+    color: #4b3e2f !important;
+    border-color: #d3c4a9 !important;
+    scrollbar-color: #d3c4a9 #f8f1e3;
+}
+
+/* Universal Background */
+body.context-aware-theme-sepia *:not([class*="context-aware"]):not([id*="zenweb"]):not(img):not(video):not(svg):not(iframe):not(input):not(textarea):not(select):not(button):not([role="button"]) {
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}
+
+/* Fix Inputs in Sepia Mode */
+body.context-aware-theme-sepia input,
+body.context-aware-theme-sepia textarea,
+body.context-aware-theme-sepia select,
+body.context-aware-theme-sepia button {
+    background-color: #f1ebd8 !important;
+    color: #4b3e2f !important;
+    border: 1px solid #d3c4a9 !important;
+}
+
+/* Fix Links */
+body.context-aware-theme-sepia a {
+    color: #a05a2c !important;
+}
+
+body.context-aware-theme-sepia a:visited {
+    color: #8a4b20 !important;
 }

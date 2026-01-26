@@ -146,8 +146,13 @@ class ReaderManager {
         document.body.classList.add('context-aware-simplify');
         document.documentElement.style.overflow = 'hidden';
 
+        // Post-processing: Fix images and protect content
+        const contentContainer = overlay.querySelector('.context-aware-reader-content');
+        this.postProcessContent(contentContainer);
+
         // Apply Theme
         this.themeManager.syncOverlayTheme(overlay);
+
 
         // Keyboard Shortcuts
         this.shortcutHandler = (e) => {
@@ -227,4 +232,59 @@ class ReaderManager {
             );
         });
     }
+
+    postProcessContent(container) {
+        if (!container) return;
+
+        // 1. Fix Lazy Loaded Images
+        // Many sites use data-src and require JS to swap it. Readability strips JS.
+        const images = container.querySelectorAll('img, picture source');
+        images.forEach(img => {
+            // Check common lazy load attributes
+            const candidates = ['data-src', 'data-original', 'data-url', 'data-srcset', 'srcset'];
+
+            // If it's a source element, we care about srcset
+            if (img.tagName === 'SOURCE') {
+                if (img.dataset.srcset) img.srcset = img.dataset.srcset;
+                return;
+            }
+
+            // For IMG tags
+            candidates.forEach(attr => {
+                if (img.getAttribute(attr)) {
+                    // specific handling for srcset
+                    if (attr.includes('srcset')) {
+                        img.srcset = img.getAttribute(attr);
+                    } else {
+                        img.src = img.getAttribute(attr);
+                    }
+                }
+            });
+
+            // Ensure they are visible
+            img.style.display = 'block';
+            img.style.opacity = '1';
+            img.style.visibility = 'visible';
+            img.loading = 'eager'; // Force load
+        });
+
+        // 2. Protect elements from Global "Nuclear" Theme Styles
+        // The global styles apply background:transparent to *:not(.context-aware...)
+        // We want to exempt Reader content from aggressive stripping to be safe,
+        // although mainly we want to ensure they don't look broken.
+        // Actually, for Reader Mode, we WANT transparent background on text blocks 
+        // so they inherit the Card color. But we might want to keep other styles.
+        // For now, removing empty or hidden elements might be good.
+
+        // Let's just create a safe class "zenweb-reader-element" and add it to all children,
+        // then specific css can target it if needed, or we just rely on the fact that
+        // the global selector excludes [class*="context-aware"]. 
+        // Wait, the global selector EXCLUDES context-aware.
+        // So if we add "context-aware-safe" to everything, they are PROTECTED from the nuclear option!
+        const allElements = container.querySelectorAll('*');
+        allElements.forEach(el => {
+            el.classList.add('context-aware-reader-child');
+        });
+    }
 }
+

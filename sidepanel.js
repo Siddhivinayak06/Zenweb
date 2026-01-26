@@ -410,13 +410,39 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   function formatSummary(text) {
+    // 1. Handle non-string inputs (e.g. pure JSON objects)
+    if (typeof text !== 'string') {
+      if (Array.isArray(text)) {
+        return '<ul>' + text.map(item => `<li>${String(item).replace(/^[-•]\s*/, '')}</li>`).join('') + '</ul>';
+      }
+      try {
+        text = JSON.stringify(text, null, 2);
+      } catch (e) {
+        text = String(text);
+      }
+    }
+
+    // 2. Handle String inputs
+    // Check if it's a JSON string representation of an array
+    if (text.trim().startsWith('[') && text.trim().endsWith(']')) {
+      try {
+        const parsed = JSON.parse(text);
+        if (Array.isArray(parsed)) {
+          return '<ul>' + parsed.map(item => `<li>${String(item).replace(/^[-•]\s*/, '')}</li>`).join('') + '</ul>';
+        }
+      } catch (e) {
+        // Not valid JSON, continue to normal text processing
+      }
+    }
+
     // Convert bullet points to list
     const lines = text.split('\n').filter(l => l.trim());
-    if (lines.every(l => l.startsWith('-') || l.startsWith('•'))) {
-      return '<ul>' + lines.map(l => `<li>${l.replace(/^[-•]\s*/, '')}</li>`).join('') + '</ul>';
+    if (lines.length > 0 && lines.every(l => l.trim().startsWith('-') || l.trim().startsWith('•') || l.trim().match(/^\d+\./))) {
+      return '<ul>' + lines.map(l => `<li>${l.replace(/^[-•]\s*|^\d+\.\s*/, '')}</li>`).join('') + '</ul>';
     }
-    return `<p>${text}</p>`;
+    return `<p>${text.replace(/\n/g, '<br>')}</p>`;
   }
+
 
   btnCopySummary?.addEventListener('click', () => {
     const text = summaryContainer.innerText;

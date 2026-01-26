@@ -33,6 +33,7 @@
         "<all_urls>"
       ],
       "js": [
+        "lib/Readability.js",
         "modules/profiles.js",
         "modules/cognitive-scorer.js",
         "modules/analytics.js",

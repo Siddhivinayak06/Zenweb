@@ -763,30 +763,52 @@ body {
    ===================================================== */
 
 body.theme-dark {
-    --bg-color: #0f172a;
-    --card-bg: #1e293b;
+    --bg-color: #121212;
+    --card-bg: #1e1e1e;
     --border-color: rgba(255, 255, 255, 0.1);
-    --text-primary: #f1f5f9;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
+    --text-primary: #e8eaed;
+    --text-secondary: #9aa0a6;
+    --text-muted: #5f6368;
+}
+
+body.theme-dark :is(h1, h2, h3, h4, h5, h6, p, span, label, .quick-label, .accordion-title) {
+    color: var(--text-primary);
 }
 
 body.theme-dark .quick-btn,
 body.theme-dark .profile-chip,
 body.theme-dark .theme-chip,
 body.theme-dark .chat-messages-compact,
-body.theme-dark .summary-compact {
-    background: rgba(30, 41, 59, 0.8);
-}
-
-body.theme-dark .chat-bubble.ai {
-    background: rgba(30, 41, 59, 0.9);
+body.theme-dark .summary-compact,
+body.theme-dark .settings-panel,
+body.theme-dark .section-accordion {
+    background: #1e1e1e;
+    border-color: #333;
     color: var(--text-primary);
 }
 
-body.theme-dark .chat-input-row input {
-    background: rgba(30, 41, 59, 0.8);
-    color: white;
+body.theme-dark .chat-bubble.ai {
+    background: #2c2c2c;
+    color: var(--text-primary);
+}
+
+body.theme-dark .chat-input-row input,
+body.theme-dark .settings-content input,
+body.theme-dark .settings-content select {
+    background: #2c2c2c;
+    color: #e8eaed;
+    border-color: #444;
+}
+
+body.theme-dark .icon-btn-small,
+body.theme-dark .close-btn {
+    color: var(--text-primary);
+}
+
+body.theme-dark .action-link,
+body.theme-dark .footer-link {
+    color: var(--text-secondary);
+    border-color: var(--border-color);
 }
 
 /* =====================================================
@@ -794,12 +816,49 @@ body.theme-dark .chat-input-row input {
    ===================================================== */
 
 body.theme-sepia {
-    --bg-color: #f5f0e6;
-    --card-bg: #ebe5d9;
-    --border-color: #d4cfc3;
-    --text-primary: #433e35;
-    --text-secondary: #6b6458;
+    --bg-color: #f8f1e3;
+    --card-bg: #fdf6e3;
+    --border-color: #d3c4a9;
+    --text-primary: #4b3e2f;
+    --text-secondary: #5b4636;
+    --text-muted: #8a7b6b;
 }
+
+body.theme-sepia :is(h1, h2, h3, h4, h5, h6, p, span, label, .quick-label, .accordion-title) {
+    color: var(--text-primary);
+}
+
+body.theme-sepia .quick-btn,
+body.theme-sepia .profile-chip,
+body.theme-sepia .theme-chip,
+body.theme-sepia .chat-messages-compact,
+body.theme-sepia .summary-compact,
+body.theme-sepia .settings-panel,
+body.theme-sepia .section-accordion {
+    background: #fffef8;
+    border-color: #e3d5b8;
+    color: var(--text-primary);
+}
+
+body.theme-sepia .chat-bubble.ai {
+    background: #fdf6e3;
+    color: var(--text-primary);
+}
+
+body.theme-sepia .chat-input-row input,
+body.theme-sepia .settings-content input,
+body.theme-sepia .settings-content select {
+    background: #fff;
+    color: var(--text-primary);
+    border-color: #d3c4a9;
+}
+
+body.theme-sepia .icon-btn-small,
+body.theme-sepia .close-btn {
+    color: var(--text-primary);
+}
+
+
 
 /* =====================================================
    RESPONSIVE

@@ -30,47 +30,64 @@ class SpeechManager {
     speak(text, onStart, onStop) {
         window.speechSynthesis.cancel(); // Clear queue
 
-        // Chunk text to avoid 15-second timeout in Chrome TTS
-        const sentences = text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [text];
-        let currentSentenceIndex = 0;
+        // Chunk text to avoid 15-second timeout in Chrome TTS and memory limits
+        const chunks = this.getChunks(text, 200); // 200 chars safe limit
+        let currentChunkIndex = 0;
 
         const speakNextChunk = () => {
-            if (currentSentenceIndex >= sentences.length) {
+            if (currentChunkIndex >= chunks.length) {
                 this.isSpeaking = false;
                 if (onStop) onStop();
                 return;
             }
 
-            const chunk = sentences[currentSentenceIndex].trim();
-            if (chunk.length === 0) {
-                currentSentenceIndex++;
+            const chunkText = chunks[currentChunkIndex].trim();
+            if (chunkText.length === 0) {
+                currentChunkIndex++;
                 speakNextChunk();
                 return;
             }
 
-            this.speechUtterance = new SpeechSynthesisUtterance(chunk);
+            // Create utterance for this chunk
+            this.speechUtterance = new SpeechSynthesisUtterance(chunkText);
 
-            // Re-apply voice logic for each chunk
+            // Re-apply voice logic for each chunk (persistence fix)
             let voices = window.speechSynthesis.getVoices();
             if (voices.length > 0) this.setBestVoice(this.speechUtterance, voices);
 
-            this.speechUtterance.rate = 1.05;
+            this.speechUtterance.rate = 1.0; // Slightly slower for better comprehension
             this.speechUtterance.pitch = 1.0;
 
             this.speechUtterance.onend = () => {
-                currentSentenceIndex++;
+                currentChunkIndex++;
                 if (this.isSpeaking) speakNextChunk();
             };
 
             this.speechUtterance.onerror = (e) => {
-                console.error("ZenWeb: TTS Chunk Error", e);
-                // Try skipping to next chunk on error instead of aborting
-                currentSentenceIndex++;
-                if (this.isSpeaking) speakNextChunk();
+                console.warn("ZenWeb: TTS Chunk Error", e);
+
+                // If the error is 'interrupted' (user cancelled), stop.
+                if (e.error === 'interrupted') {
+                    this.isSpeaking = false;
+                    return;
+                }
+
+                // Otherwise, try to skip to the next chunk
+                currentChunkIndex++;
+                if (this.isSpeaking) {
+                    // Small delay to let the engine recover
+                    setTimeout(() => speakNextChunk(), 50);
+                }
             };
 
-            window.speechSynthesis.speak(this.speechUtterance);
+            try {
+                window.speechSynthesis.speak(this.speechUtterance);
+            } catch (err) {
+                currentChunkIndex++;
+                speakNextChunk();
+            }
         };
+
 
         // Ensure voices loaded
         let voices = window.speechSynthesis.getVoices();
@@ -133,4 +150,34 @@ class SpeechManager {
             utterance.voice = selectedVoice;
         }
     }
+    getChunks(text, maxLength) {
+        if (!text) return [];
+
+        const chunks = [];
+        // First split by common sentence delimiters to respect grammar
+        const sentences = text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [text];
+
+        for (let sentence of sentences) {
+            sentence = sentence.trim();
+            if (sentence.length <= maxLength) {
+                chunks.push(sentence);
+            } else {
+                // Sentence too long, split by words
+                const words = sentence.split(/\s+/);
+                let currentChunk = "";
+
+                for (const word of words) {
+                    if ((currentChunk + word).length < maxLength) {
+                        currentChunk += (currentChunk ? " " : "") + word;
+                    } else {
+                        if (currentChunk) chunks.push(currentChunk);
+                        currentChunk = word;
+                    }
+                }
+                if (currentChunk) chunks.push(currentChunk);
+            }
+        }
+        return chunks;
+    }
 }
+
