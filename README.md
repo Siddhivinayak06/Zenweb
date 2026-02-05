@@ -27,16 +27,23 @@ Leverage AI to understand page content faster.
 - **Explain Selection**: Right-click any text → "Explain with ZenWeb" for instant AI explanation.
 - **On-Device AI**: Uses Gemini Nano (where available) for privacy, falls back to Cloud API.
 
-### ♿ Accessibility
-- **Dyslexia Font**: Toggle a dyslexia-friendly font globally.
-- **Theme Persistence**: Your preferences are saved and synced across sessions.
+### ☯️ Simultaneous Modes (New!)
+Both **Simplify** and **Focus** modes can now be active at the same time! 
+- Enable Simplify for a clean reading experience, then enable Focus to highlight specific paragraphs.
+- The toolbars automatically merge into a single unified control bar.
+- arrow keys navigation continues to work seamlessly even in combined mode.
+
+### 📰 Enhanced News Support
+Optimized specifically for Indian news websites (Times of India, Hindustan Times, etc.) to correctly detect content layout and avoid "No readable text" errors.
 
 ### ⌨️ Keyboard Shortcuts
 | Shortcut | Action |
 |----------|--------|
+| `Cmd/Ctrl + Shift + E` | **Open Side Panel** (New!) |
 | `Cmd/Ctrl + Shift + S` | Toggle Simplify Mode |
 | `Cmd/Ctrl + Shift + F` | Toggle Focus Mode |
 | `Esc` | Close Reader/Focus Mode |
+| `↑` / `↓` | Navigate Paragraphs (Focus Mode) |
 | `+` / `-` | Adjust font size (Reader) |
 | `t` | Toggle theme (Reader) |
 | `s` | Toggle speech (Reader) |

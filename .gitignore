@@ -1,0 +1,32 @@
+# MacOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Node / NPM (if added later)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Environment Variables
+.env
+.env.local
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build output
+dist/
+build/
+
+# Local Gemini / Agent files (if stored locally in project, though usually in .gemini)
+# We want to keep the artifacts if they are in the project, but maybe ignore temp stuff.
+# For now, standard ignores are safe.

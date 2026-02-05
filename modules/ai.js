@@ -1,6 +1,7 @@
 class AIManager {
     constructor() {
-        // AI logic doesn't need much state, mostly utility methods
+        this.ollamaUrl = 'http://localhost:11434/api/generate';
+        this.model = 'llama3.1';
     }
 
     async summarizePage() {
@@ -8,7 +9,7 @@ class AIManager {
 
         // Form Summarization Logic
         if (mainContent.tagName === 'FORM' || mainContent.querySelector('form')) {
-            return ["Form detected. AI summary not applicable."]; // Simplified for now
+            return ["Form detected. AI summary not applicable."];
         }
 
         // Article/Text Summarization Logic
@@ -37,59 +38,86 @@ class AIManager {
         const main = document.querySelector('main');
         if (main && main.innerText.length > 600) return main;
 
-        // Heuristic 3: Density Scoring (Simplified from original for brevity or we can keep full logic)
-        // For refactoring, we'll keep the full logic in the module if needed, or rely on Readability
-        // Let's rely on Readability mostly, but fallback to body
         return document.body;
     }
 
     async summarizeText(text) {
-        // Priority 1: On-Device AI (Gemini Nano)
-        if (window.ai && window.ai.languageModel) {
-            try {
-                const capabilities = await window.ai.languageModel.capabilities();
-                if (capabilities.available !== 'no') {
-                    console.log("ZenWeb: Using On-Device AI");
-                    const session = await window.ai.languageModel.create();
+        const truncatedText = text.substring(0, 15000); // Expanding context window
+        const prompt = `Summarize the following article in 3 distinct, concise bullet points (Start each with "• "). Focus on the main ideas:\n\n${truncatedText}`;
 
-                    const truncatedText = text.substring(0, 10000);
-                    const prompt = `Summarize the following article in 3 distinct, concise bullet points (Start each with "• "). Focus on the main ideas:\n\n${truncatedText}`;
-
-                    const result = await session.prompt(prompt);
-                    return result.split('\n').map(line => line.trim().replace(/^•\s*/, '')).filter(line => line.length > 0);
-                }
-            } catch (e) {
-                console.error("ZenWeb: On-Device AI failed, falling back to Cloud.", e);
+        try {
+            const response = await this.callOllama(prompt);
+            if (response) {
+                // Parse bullet points
+                return response.split('\n')
+                    .map(line => line.trim().replace(/^[-•*]\s*/, ''))
+                    .filter(line => line.length > 10);
             }
+        } catch (e) {
+            console.error("ZenWeb: Ollama summary failed", e);
         }
 
-        // Priority 2: Cloud API (Gemini via Background)
+        // Fallback: Simple heuristic
+        return this.fallbackSummary(text);
+    }
+
+    async extractActionItems(text) {
+        const truncatedText = text.substring(0, 15000);
+        const prompt = `Identify actionable tasks or to-do items in the following text. Return them as a JSON array of strings. If none, return [].\n\nText:\n${truncatedText}`;
         try {
-            console.log("ZenWeb: Attempting Cloud API");
-            const cloudSummary = await new Promise((resolve) => {
-                chrome.runtime.sendMessage({
-                    action: 'summarize_with_api',
-                    text: text.substring(0, 20000)
-                }, (response) => {
-                    if (chrome.runtime.lastError || response?.error) {
-                        resolve(null);
-                    } else {
-                        resolve(response.summary);
-                    }
-                });
+            const response = await this.callOllama(prompt);
+            // Attempt to parse JSON from response (Ollama might add chatter)
+            const jsonMatch = response.match(/\[.*\]/s);
+            if (jsonMatch) {
+                return JSON.parse(jsonMatch[0]);
+            }
+            // Fallback: split by lines if it looks like a list
+            return response.split('\n').filter(line => line.trim().length > 0).map(l => l.replace(/^[-*•\d\.]+\s*/, ''));
+        } catch (e) {
+            console.error("ZenWeb: Action extraction failed", e);
+            return [];
+        }
+    }
+
+    async simplifyText(text) {
+        const prompt = `Rewrite the following text at a 5th-grade reading level. Keep it concise:\n\n${text}`;
+        return await this.callOllama(prompt);
+    }
+
+    async defineTerm(term, context) {
+        const prompt = `Define the term "${term}" in simple, plain English. Context: "${context}". Keep definition under 20 words.`;
+        return await this.callOllama(prompt);
+    }
+
+    async callOllama(prompt) {
+        try {
+            const response = await fetch(this.ollamaUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: this.model,
+                    prompt: prompt,
+                    stream: false
+                })
             });
 
-            if (cloudSummary && cloudSummary.length > 0) return cloudSummary;
-        } catch (e) {
-            console.error("ZenWeb: Cloud API error", e);
-        }
+            if (!response.ok) {
+                throw new Error(`Ollama API error: ${response.statusText}`);
+            }
 
-        // Priority 3: Fallback Heuristics
+            const data = await response.json();
+            return data.response;
+        } catch (e) {
+            console.error("ZenWeb: Failed to call Ollama.", e);
+            return null;
+        }
+    }
+
+    fallbackSummary(text) {
         console.log("ZenWeb: Using fallback analytics.");
         const sentences = text.match(/[^\.!\?]+[\.!\?]+/g) || [];
         if (sentences.length <= 3) return sentences.length > 0 ? sentences : ["No significant content found."];
 
-        // Simple scoring based on word frequency
         const wordCounts = {};
         const words = text.toLowerCase().match(/\w+/g) || [];
         words.forEach(w => { if (w.length > 3) wordCounts[w] = (wordCounts[w] || 0) + 1; });
@@ -105,3 +133,4 @@ class AIManager {
         return sentenceScores.slice(0, 3).sort((a, b) => a.index - b.index).map(s => s.text);
     }
 }
+

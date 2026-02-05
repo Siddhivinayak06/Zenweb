@@ -25,6 +25,84 @@ body.context-aware-simplify {
     box-sizing: border-box;
 }
 
+/* Focus Mode INSIDE Reader Overlay - when both modes active */
+body.context-aware-focus .context-aware-reader-overlay {
+    background-color: rgba(10, 10, 12, 0.98);
+}
+
+body.context-aware-focus .context-aware-reader-overlay .context-aware-reader-content {
+    background-color: transparent;
+    box-shadow: none;
+}
+
+/* Dim ALL non-highlighted content in combined mode */
+body.context-aware-focus .context-aware-reader-overlay .context-aware-reader-content p:not(.focus-mode-highlight),
+body.context-aware-focus .context-aware-reader-overlay .context-aware-reader-content h1:not(.focus-mode-highlight),
+body.context-aware-focus .context-aware-reader-overlay .context-aware-reader-content h2:not(.focus-mode-highlight),
+body.context-aware-focus .context-aware-reader-overlay .context-aware-reader-content h3:not(.focus-mode-highlight),
+body.context-aware-focus .context-aware-reader-overlay .context-aware-reader-content li:not(.focus-mode-highlight),
+body.context-aware-focus .context-aware-reader-overlay .context-aware-reader-content blockquote:not(.focus-mode-highlight),
+body.context-aware-focus .context-aware-reader-overlay .context-aware-reader-content img,
+body.context-aware-focus .context-aware-reader-overlay .context-aware-reader-content figure,
+body.context-aware-focus .context-aware-reader-overlay .context-aware-reader-content .context-aware-reader-meta {
+    opacity: 0.2;
+    filter: blur(1.5px);
+    transition: opacity 0.3s ease, filter 0.3s ease;
+}
+
+body.context-aware-focus .context-aware-reader-overlay .context-aware-reader-content .focus-mode-highlight {
+    opacity: 1 !important;
+    filter: none !important;
+    background-color: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.05), 0 4px 20px rgba(0, 0, 0, 0.5);
+    border-radius: 6px;
+    color: #e2e8f0 !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+/* Light theme combined mode */
+body.context-aware-focus .context-aware-reader-overlay.context-aware-theme-light {
+    background-color: rgba(255, 255, 255, 0.95);
+}
+
+body.context-aware-focus .context-aware-reader-overlay.context-aware-theme-light .context-aware-reader-content p:not(.focus-mode-highlight),
+body.context-aware-focus .context-aware-reader-overlay.context-aware-theme-light .context-aware-reader-content h1:not(.focus-mode-highlight),
+body.context-aware-focus .context-aware-reader-overlay.context-aware-theme-light .context-aware-reader-content h2:not(.focus-mode-highlight),
+body.context-aware-focus .context-aware-reader-overlay.context-aware-theme-light .context-aware-reader-content h3:not(.focus-mode-highlight),
+body.context-aware-focus .context-aware-reader-overlay.context-aware-theme-light .context-aware-reader-content li:not(.focus-mode-highlight),
+body.context-aware-focus .context-aware-reader-overlay.context-aware-theme-light .context-aware-reader-content blockquote:not(.focus-mode-highlight),
+body.context-aware-focus .context-aware-reader-overlay.context-aware-theme-light .context-aware-reader-content img,
+body.context-aware-focus .context-aware-reader-overlay.context-aware-theme-light .context-aware-reader-content figure {
+    color: #222 !important;
+    opacity: 0.4;
+}
+
+body.context-aware-focus .context-aware-reader-overlay.context-aware-theme-light .context-aware-reader-content .focus-mode-highlight {
+    color: #000 !important;
+    background-color: transparent;
+    text-shadow: none;
+    font-weight: 500;
+}
+
+/* Sepia theme combined mode */
+body.context-aware-focus .context-aware-reader-overlay.context-aware-theme-sepia {
+    background-color: rgba(248, 241, 227, 0.98);
+}
+
+body.context-aware-focus .context-aware-reader-overlay.context-aware-theme-sepia .context-aware-reader-content p:not(.focus-mode-highlight),
+body.context-aware-focus .context-aware-reader-overlay.context-aware-theme-sepia .context-aware-reader-content h1:not(.focus-mode-highlight),
+body.context-aware-focus .context-aware-reader-overlay.context-aware-theme-sepia .context-aware-reader-content h2:not(.focus-mode-highlight) {
+    color: #4b3b28 !important;
+    opacity: 0.4;
+}
+
+body.context-aware-focus .context-aware-reader-overlay.context-aware-theme-sepia .context-aware-reader-content .focus-mode-highlight {
+    color: #4b3b28 !important;
+    background-color: rgba(95, 75, 50, 0.05);
+    text-shadow: none;
+    font-weight: 500;
+}
+
 /* Toolbar */
 .context-aware-reader-toolbar {
     position: fixed;
@@ -281,7 +359,9 @@ body::after {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(10, 10, 12, 0.85);
+    /* Use CSS variable for opacity to allow profile customization (default 0.85) */
+    --zenweb-focus-opacity: 0.85;
+    background: rgba(10, 10, 12, var(--zenweb-focus-opacity));
     /* Lighter default for navigation */
     z-index: 2147483646 !important;
     /* Max safe integer - 1 */
@@ -535,6 +615,7 @@ body.context-aware-theme-dark.context-aware-focus textarea {
     z-index: 9997;
     transform: translateY(-50%);
     display: none;
+    mix-blend-mode: multiply;
 }
 
 body.context-aware-focus .zenweb-reading-guide {
@@ -616,6 +697,68 @@ body.context-aware-focus .focus-mode-highlight {
     background: rgba(255, 255, 255, 0.1) !important;
     color: white !important;
     border-color: #60a5fa !important;
+}
+
+/* Inline Focus Controls (when merged with Reader toolbar) */
+.zenweb-focus-inline-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.zenweb-focus-inline-controls .toolbar-divider {
+    width: 1px;
+    height: 24px;
+    background: rgba(0, 0, 0, 0.1);
+    margin: 0 8px;
+}
+
+.context-aware-reader-overlay.context-aware-theme-dark .zenweb-focus-inline-controls .toolbar-divider {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.zenweb-focus-inline-controls .timer-display {
+    font-size: 14px;
+    font-weight: 600;
+    color: #3b82f6;
+    font-variant-numeric: tabular-nums;
+}
+
+.zenweb-focus-inline-controls button {
+    background: transparent;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 12px;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.zenweb-focus-inline-controls button:hover {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+    border-color: #3b82f6;
+}
+
+.zenweb-focus-inline-controls .timer-preset {
+    font-size: 11px;
+    padding: 3px 6px;
+}
+
+/* Dark theme for inline controls */
+.context-aware-reader-overlay.context-aware-theme-dark .zenweb-focus-inline-controls .timer-display {
+    color: #60a5fa;
+}
+
+.context-aware-reader-overlay.context-aware-theme-dark .zenweb-focus-inline-controls button {
+    color: #a3a3a3;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.context-aware-reader-overlay.context-aware-theme-dark .zenweb-focus-inline-controls button:hover {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
 }
 
 /* Toast Notification */
@@ -904,4 +1047,74 @@ body.context-aware-theme-sepia a {
 
 body.context-aware-theme-sepia a:visited {
     color: #8a4b20 !important;
+}
+
+/* =====================================================
+   BIONIC READING STYLES
+   Bold first letters for faster reading
+   ===================================================== */
+
+.bionic-bold {
+    font-weight: 700 !important;
+}
+
+/* Ensure bionic bolding works in all themes */
+body.context-aware-theme-dark .bionic-bold,
+body.context-aware-theme-sepia .bionic-bold,
+body.context-aware-theme-light .bionic-bold {
+    font-weight: 700 !important;
+}
+
+/* Global bionic reading indicator */
+body.zenweb-bionic-reading .context-aware-reader-content {
+    letter-spacing: 0.02em;
+}
+
+/* =====================================================
+   TIME-TO-READ BADGE STYLES
+   ===================================================== */
+
+.reading-time-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+    color: #6366f1;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'Inter', system-ui, sans-serif;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    margin-left: 12px;
+    animation: badgeFadeIn 0.4s ease-out;
+}
+
+@keyframes badgeFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.reading-time-badge .time-icon {
+    font-size: 11px;
+}
+
+/* Theme variants for reading time badge */
+.context-aware-theme-dark .reading-time-badge {
+    background: linear-gradient(135deg, rgba(96, 165, 250, 0.15), rgba(167, 139, 250, 0.15));
+    color: #60a5fa;
+    border-color: rgba(96, 165, 250, 0.3);
+}
+
+.context-aware-theme-sepia .reading-time-badge {
+    background: linear-gradient(135deg, rgba(160, 90, 44, 0.1), rgba(138, 109, 59, 0.1));
+    color: #a05a2c;
+    border-color: rgba(160, 90, 44, 0.2);
 }

@@ -1,10 +1,13 @@
 /**
  * ZenWeb Sidepanel - Simplified Controller
  */
+import { actionExtractor } from './modules/action-extractor.js';
+
 document.addEventListener('DOMContentLoaded', () => {
   // Quick Action Buttons
   const btnSimplify = document.getElementById('btn-simplify');
   const btnFocus = document.getElementById('btn-focus');
+  const btnPause = document.getElementById('btn-pause');
   const btnReset = document.getElementById('btn-reset');
   const btnSummarize = document.getElementById('btn-summarize');
 
@@ -28,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Appearance Elements
   const checkDyslexia = document.getElementById('check-dyslexia');
+  const checkBionic = document.getElementById('check-bionic');
   const checkAdBlocker = document.getElementById('check-adblocker');
   const adsHiddenBadge = document.getElementById('ads-hidden-badge');
   const themeChips = document.querySelectorAll('.theme-chip');
@@ -57,6 +61,138 @@ document.addEventListener('DOMContentLoaded', () => {
   // State
   let currentTabId = null;
   let currentActiveProfile = null;
+  let extractedActions = []; // Store for copy/export
+
+  // ========================================
+  // ACTION EXTRACTOR (PRO)
+  // ========================================
+  const btnActions = document.getElementById('btn-actions');
+  const actionPanel = document.getElementById('action-panel');
+  const btnCloseActions = document.getElementById('btn-close-actions');
+  const actionListContainer = document.getElementById('action-list-container');
+  const btnCopyActions = document.getElementById('btn-copy-actions');
+  const btnExportActions = document.getElementById('btn-export-actions');
+
+  // Toggle Panel with Paywall Check
+  btnActions?.addEventListener('click', () => {
+    actionPanel.classList.remove('hidden');
+    actionListContainer.innerHTML = '<div class="action-empty-state"><p>Checking subscription...</p></div>';
+
+    // Check Pro Status
+    sendMessage('get_subscription_status', {}, (status) => {
+      if (status && status.isPro) {
+        scanForActions();
+        btnExportActions.style.display = 'block';
+      } else {
+        renderPaywall();
+        btnExportActions.style.display = 'none';
+      }
+    });
+  });
+
+  btnCloseActions?.addEventListener('click', () => {
+    actionPanel.classList.add('hidden');
+  });
+
+  function renderPaywall() {
+    actionListContainer.innerHTML = `
+        <div class="action-empty-state" style="padding: 30px 20px;">
+            <div style="font-size: 40px; margin-bottom: 20px;">🔒</div>
+            <h3 style="margin-bottom: 10px; color: var(--text-primary);">Pro Feature</h3>
+            <p style="margin-bottom: 20px; font-size: 14px;">Upgrade to Context+ to automatically extract tasks, deadlines, and export them to your calendar.</p>
+            <button id="btn-upgrade-trigger" class="action-btn" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">Upgrade for $4.99/mo</button>
+            <p style="margin-top: 15px; font-size: 12px; color: var(--text-muted);">
+                <a href="#" id="link-simulate-pro" style="color: var(--accent-primary);">Dev: Simulate Upgrade</a>
+            </p>
+        </div>
+      `;
+
+
+    // Connect Upgrade Button
+    document.getElementById('btn-upgrade-trigger')?.addEventListener('click', () => {
+      chrome.tabs.create({ url: chrome.runtime.getURL('pricing.html') });
+    });
+
+    // Dev backdoor
+    document.getElementById('link-simulate-pro')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      sendMessage('simulate_upgrade', {}, () => {
+        btnActions.click(); // Reload
+      });
+    });
+  }
+
+  function scanForActions() {
+    actionListContainer.innerHTML = '<div class="action-empty-state"><p>Scanning page for tasks...</p></div>';
+
+    // Get text from page
+    sendMessage('get_page_content', {}, (response) => {
+      if (response && response.content) {
+        extractedActions = actionExtractor.scan(response.content);
+        renderActions(extractedActions);
+      } else {
+        actionListContainer.innerHTML = '<div class="action-empty-state"><p>Could not read page content.</p></div>';
+      }
+    });
+  }
+
+  function renderActions(actions) {
+    if (actions.length === 0) {
+      actionListContainer.innerHTML = '<div class="action-empty-state"><p>No specific action items found.</p></div>';
+      return;
+    }
+
+    actionListContainer.innerHTML = '';
+    actions.forEach(action => {
+      const item = document.createElement('div');
+      item.className = 'action-item';
+      if (action.priority === 'high') item.classList.add('priority-high');
+
+      const dateBadge = action.dates && action.dates.length ? `<span class="date-badge">📅 ${action.dates[0]}</span>` : '';
+      const priorityBadge = action.priority === 'high' ? `<span class="priority-badge">🔥 High</span>` : '';
+
+      item.innerHTML = `
+      <input type="checkbox" class="action-checkbox">
+        <div class="action-details">
+          <div class="action-text">${action.text}</div>
+          <div class="action-meta">
+            ${dateBadge}
+            ${priorityBadge}
+          </div>
+        </div>
+    `;
+
+      item.querySelector('input')?.addEventListener('change', (e) => {
+        item.classList.toggle('checked', e.target.checked);
+      });
+
+      actionListContainer.appendChild(item);
+    });
+  }
+
+  btnCopyActions?.addEventListener('click', () => {
+    const items = Array.from(actionListContainer.querySelectorAll('.action-item:not(.checked) .action-text')).map(el => '- [ ] ' + el.textContent);
+    if (items.length === 0) return;
+
+    navigator.clipboard.writeText(items.join('\n'));
+
+    const originalText = btnCopyActions.innerText;
+    btnCopyActions.textContent = '✓ Copied!';
+    setTimeout(() => btnCopyActions.textContent = originalText, 2000);
+  });
+
+  btnExportActions?.addEventListener('click', () => {
+    const pendingTasks = extractedActions.filter((_, i) => !document.querySelectorAll('.action-item')[i]?.classList.contains('checked'));
+    if (pendingTasks.length === 0) return;
+
+    const originalText = btnExportActions.innerText;
+    btnExportActions.textContent = 'Exporting...';
+
+    actionExtractor.exportToService('Todoist', pendingTasks).then(res => {
+      btnExportActions.textContent = `✓ Sent ${res.count} tasks`;
+      setTimeout(() => btnExportActions.textContent = originalText, 2000);
+    });
+  });
 
   // ========================================
   // INITIALIZATION
@@ -102,9 +238,10 @@ document.addEventListener('DOMContentLoaded', () => {
       updateProfileUI(currentActiveProfile);
     });
 
-    // Load dyslexia font
-    chrome.storage.local.get(['dyslexiaFont', 'theme', 'adBlockerEnabled'], (result) => {
+    // Load dyslexia font, bionic reading, and other settings
+    chrome.storage.local.get(['dyslexiaFont', 'bionicReading', 'theme', 'adBlockerEnabled'], (result) => {
       if (checkDyslexia) checkDyslexia.checked = !!result.dyslexiaFont;
+      if (checkBionic) checkBionic.checked = !!result.bionicReading;
       if (checkAdBlocker) checkAdBlocker.checked = result.adBlockerEnabled !== false;
       updateThemeUI(result.theme || 'light');
     });
@@ -115,10 +252,33 @@ document.addEventListener('DOMContentLoaded', () => {
   // ========================================
 
   function sendMessage(action, data = {}, callback) {
-    if (!currentTabId) return;
+    const runtimeActions = [
+      'login', 'signup', 'logout', 'get_user_status',
+      'check_usage_limit', 'simulate_upgrade', 'open_pricing',
+      'summarize_with_api', 'chat_with_api'
+    ];
+
+    if (runtimeActions.includes(action)) {
+      chrome.runtime.sendMessage({ action, ...data }, (response) => {
+        if (chrome.runtime.lastError) {
+          console.error("ZenWeb: Runtime message error", chrome.runtime.lastError);
+          if (callback) callback({ error: { message: "Connection to background failed. Reload extension." } });
+        } else {
+          if (callback) callback(response);
+        }
+      });
+      return;
+    }
+
+    if (!currentTabId) {
+      if (callback) callback({ error: { message: "No active tab" } });
+      return;
+    }
     chrome.tabs.sendMessage(currentTabId, { action, ...data }, (response) => {
       if (chrome.runtime.lastError) {
-        console.log('ZenWeb: Message error -', chrome.runtime.lastError.message);
+        // This often happens if content script isn't loaded yet
+        console.log('ZenWeb: Tab message error -', chrome.runtime.lastError.message);
+        if (callback) callback({ error: { message: "Connection to page failed. Try reloading the page." } });
         return;
       }
       if (callback) callback(response);
@@ -134,7 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!response) return;
 
       // Update mode UI
-      updateModeUI(response.mode);
+      updateModeUI(response.mode, response);
 
       // Update ad blocker status
       sendMessage('get_adblocker_status', {}, (adResponse) => {
@@ -151,9 +311,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function updateModeUI(mode) {
-    btnSimplify.classList.toggle('active', mode === 'simplify');
-    btnFocus.classList.toggle('active', mode === 'focus');
+  function updateModeUI(mode, response) {
+    // Support both modes being active simultaneously
+    const simplifyOn = response?.simplifyActive || mode === 'simplify' || mode === 'both';
+    const focusOn = response?.focusActive || mode === 'focus' || mode === 'both';
+    btnSimplify.classList.toggle('active', simplifyOn);
+    btnFocus.classList.toggle('active', focusOn);
   }
 
   // ========================================
@@ -185,7 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
     scoreEmoji.textContent = level?.emoji || '📊';
     scoreValue.textContent = score;
     scoreLabel.textContent = level?.label || 'Page Load Score';
-    scoreStrip.className = `score-strip ${level?.level || ''}`;
+    scoreStrip.className = `score - strip ${level?.level || ''} `;
   }
 
   btnRefreshScore?.addEventListener('click', () => {
@@ -204,6 +367,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   btnFocus?.addEventListener('click', () => {
     sendMessage('toggle_focus', {}, () => refreshStatus());
+  });
+
+  btnPause?.addEventListener('click', () => {
+    sendMessage('toggle_pause', {}, (response) => {
+      if (response && response.paused) {
+        btnPause.classList.add('active');
+        btnPause.querySelector('.quick-label').textContent = 'Resume';
+      } else {
+        btnPause.classList.remove('active');
+        btnPause.querySelector('.quick-label').textContent = 'Pause';
+      }
+    });
   });
 
   btnReset?.addEventListener('click', () => {
@@ -276,17 +451,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const valWordSpacing = document.getElementById('val-word-spacing');
 
   // Events for Sliders
-  inputFontSize?.addEventListener('input', (e) => valFontSize.textContent = `${e.target.value}px`);
+  inputFontSize?.addEventListener('input', (e) => valFontSize.textContent = `${e.target.value} px`);
   inputLineSpacing?.addEventListener('input', (e) => valLineSpacing.textContent = e.target.value);
-  inputWordSpacing?.addEventListener('input', (e) => valWordSpacing.textContent = `${e.target.value}em`);
+  inputWordSpacing?.addEventListener('input', (e) => valWordSpacing.textContent = `${e.target.value} em`);
 
   btnEditCustom?.addEventListener('click', () => {
     // Load current settings
     chrome.storage.sync.get(['customProfileSettings'], (result) => {
       const settings = result.customProfileSettings || {};
-      if (settings.fontSize) { inputFontSize.value = settings.fontSize; valFontSize.textContent = `${settings.fontSize}px`; }
+      if (settings.fontSize) { inputFontSize.value = settings.fontSize; valFontSize.textContent = `${settings.fontSize} px`; }
       if (settings.lineSpacing) { inputLineSpacing.value = settings.lineSpacing; valLineSpacing.textContent = settings.lineSpacing; }
-      if (settings.wordSpacing) { inputWordSpacing.value = settings.wordSpacing; valWordSpacing.textContent = `${settings.wordSpacing}em`; }
+      if (settings.wordSpacing) { inputWordSpacing.value = settings.wordSpacing; valWordSpacing.textContent = `${settings.wordSpacing} em`; }
       if (settings.useDyslexiaFont) { inputCustomDyslexia.checked = settings.useDyslexiaFont; }
     });
     customEditor.classList.remove('hidden');
@@ -333,6 +508,12 @@ document.addEventListener('DOMContentLoaded', () => {
     sendMessage(enabled ? 'enable_dyslexia' : 'disable_dyslexia');
   });
 
+  checkBionic?.addEventListener('change', (e) => {
+    const enabled = e.target.checked;
+    chrome.storage.local.set({ bionicReading: enabled });
+    sendMessage(enabled ? 'enable_bionic' : 'disable_bionic');
+  });
+
   checkAdBlocker?.addEventListener('change', (e) => {
     const enabled = e.target.checked;
     chrome.storage.local.set({ adBlockerEnabled: enabled });
@@ -359,7 +540,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const theme = chip.dataset.theme;
       chrome.storage.local.set({ theme });
       updateThemeUI(theme);
-      sendMessage(`set_theme_${theme}`);
+      chrome.storage.local.set({ theme });
+      updateThemeUI(theme);
+      sendMessage(`set_theme_${theme} `);
     });
   });
 
@@ -367,8 +550,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // SETTINGS
   // ========================================
 
+  // ========================================
+  // SETTINGS & AUTH
+  // ========================================
+
   btnSettings?.addEventListener('click', () => {
     settingsPanel.classList.remove('hidden');
+    refreshAuthUI();
   });
 
   btnCloseSettings?.addEventListener('click', () => {
@@ -384,6 +572,113 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => settingsStatus.textContent = '', 2000);
       });
     }
+  });
+
+  // Auth Elements
+  const authSection = document.getElementById('user-account-section');
+  const loggedOutView = document.getElementById('user-logged-out');
+  const loggedInView = document.getElementById('user-logged-in');
+  const emailInput = document.getElementById('auth-email-input');
+  const passwordInput = document.getElementById('auth-password-input');
+  const btnLogin = document.getElementById('btn-login');
+  const btnToggleAuthMode = document.getElementById('btn-toggle-auth-mode');
+  const authErrorMsg = document.getElementById('auth-error-msg');
+
+  const btnLogout = document.getElementById('btn-logout');
+  const btnUpgradeAccount = document.getElementById('btn-upgrade-account');
+  const userName = document.getElementById('user-name');
+  const userAvatar = document.getElementById('user-avatar');
+  const userPlanBadge = document.getElementById('user-plan-badge');
+
+  let isSignupMode = false;
+
+  function refreshAuthUI(callback) {
+    sendMessage('get_user_status', {}, (user) => {
+      if (user) {
+        loggedOutView.classList.add('hidden');
+        loggedInView.classList.remove('hidden');
+        userName.textContent = user.name || user.email;
+        userAvatar.src = user.avatar;
+        userPlanBadge.textContent = user.plan.toUpperCase();
+        userPlanBadge.style.background = user.plan === 'pro' ? '#6366f1' : '#64748b';
+
+        if (user.plan === 'pro') {
+          btnUpgradeAccount.classList.add('hidden');
+        } else {
+          btnUpgradeAccount.classList.remove('hidden');
+        }
+      } else {
+        loggedOutView.classList.remove('hidden');
+        loggedInView.classList.add('hidden');
+        // We generally clear messages, but callback might override
+        if (authErrorMsg) authErrorMsg.textContent = '';
+        if (passwordInput) passwordInput.value = '';
+      }
+      if (callback) callback(user);
+    });
+  }
+
+  btnToggleAuthMode?.addEventListener('click', (e) => {
+    e.preventDefault();
+    isSignupMode = !isSignupMode;
+    if (isSignupMode) {
+      btnLogin.textContent = 'Sign Up';
+      btnToggleAuthMode.textContent = 'Have an account? Sign In';
+    } else {
+      btnLogin.textContent = 'Sign In';
+      btnToggleAuthMode.textContent = 'Need an account? Sign Up';
+    }
+    authErrorMsg.textContent = '';
+    authErrorMsg.style.removeProperty('color');
+  });
+
+  btnLogin?.addEventListener('click', () => {
+    const email = emailInput.value.trim();
+    const password = passwordInput.value.trim();
+
+    if (!email || !password) {
+      authErrorMsg.textContent = 'Email & Password required';
+      authErrorMsg.style.color = '#ef4444';
+      return;
+    }
+
+    authErrorMsg.textContent = 'Loading...';
+    authErrorMsg.style.removeProperty('color');
+    const action = isSignupMode ? 'signup' : 'login';
+
+    sendMessage(action, { email, password }, (response) => {
+      if (response && response.error) {
+        authErrorMsg.textContent = response.error.message || 'Auth failed';
+        authErrorMsg.style.color = '#ef4444';
+      } else if (isSignupMode && !response?.id) {
+        // Fallback catch
+        authErrorMsg.textContent = 'Signup Requires Confirmation (Check Email)';
+      } else {
+        // Success
+        refreshAuthUI((user) => {
+          if (isSignupMode && !user) {
+            // Signup success but not logged in -> Confirmation needed
+            authErrorMsg.textContent = 'Sign up successful! Check your email to confirm.';
+            authErrorMsg.style.color = '#10b981'; // Green
+            emailInput.value = '';
+            passwordInput.value = '';
+          } else {
+            // Logged in (or login mode)
+            authErrorMsg.textContent = '';
+            emailInput.value = '';
+            passwordInput.value = '';
+          }
+        });
+      }
+    });
+  });
+
+  btnLogout?.addEventListener('click', () => {
+    sendMessage('logout', {}, () => refreshAuthUI());
+  });
+
+  btnUpgradeAccount?.addEventListener('click', () => {
+    chrome.tabs.create({ url: chrome.runtime.getURL('pricing.html') });
   });
 
   // ========================================
@@ -402,7 +697,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (response.summary) {
         summaryContainer.innerHTML = `<div class="summary-text">${formatSummary(response.summary)}</div>`;
+        const remaining = response.remaining;
+        if (remaining !== undefined && remaining !== 'Unlimited') {
+          // Optional: Show remaining count toast
+          const badge = document.createElement('div');
+          badge.className = 'limit-badge';
+          badge.innerHTML = `<span style="font-size:10px; opacity:0.7">${remaining} free credits left</span>`;
+          summaryContainer.prepend(badge);
+        }
         summaryActions.classList.remove('hidden');
+      } else if (response.limitReached) {
+        summaryContainer.innerHTML = `
+      <div class="action-empty-state" style="padding: 20px;">
+                <div style="font-size: 32px; margin-bottom: 15px;">🛑</div>
+                <h4 style="margin-bottom: 8px;">Free Limit Reached</h4>
+                <p style="font-size: 13px; margin-bottom: 15px;">You've used your 5 free AI summaries this month.</p>
+                <button id="btn-upgrade-summary" class="action-btn" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">Upgrade to Unlimited</button>
+            </div>
+      `;
+        document.getElementById('btn-upgrade-summary')?.addEventListener('click', () => {
+          chrome.tabs.create({ url: chrome.runtime.getURL('pricing.html') });
+        });
       } else if (response.error) {
         summaryContainer.innerHTML = `<p class="summary-placeholder">❌ ${response.error}</p>`;
       }
@@ -428,7 +743,7 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const parsed = JSON.parse(text);
         if (Array.isArray(parsed)) {
-          return '<ul>' + parsed.map(item => `<li>${String(item).replace(/^[-•]\s*/, '')}</li>`).join('') + '</ul>';
+          return '<ul>' + parsed.map(item => `< li > ${String(item).replace(/^[-•]\s*/, '')}</li > `).join('') + '</ul>';
         }
       } catch (e) {
         // Not valid JSON, continue to normal text processing
@@ -438,9 +753,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Convert bullet points to list
     const lines = text.split('\n').filter(l => l.trim());
     if (lines.length > 0 && lines.every(l => l.trim().startsWith('-') || l.trim().startsWith('•') || l.trim().match(/^\d+\./))) {
-      return '<ul>' + lines.map(l => `<li>${l.replace(/^[-•]\s*|^\d+\.\s*/, '')}</li>`).join('') + '</ul>';
+      return '<ul>' + lines.map(l => `< li > ${l.replace(/^[-•]\s*|^\d+\.\s*/, '')}</li > `).join('') + '</ul>';
     }
-    return `<p>${text.replace(/\n/g, '<br>')}</p>`;
+    return `< p > ${text.replace(/\n/g, '<br>')}</p > `;
   }
 
 
@@ -568,6 +883,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   });
+
+
 
   // Initialize
   init();

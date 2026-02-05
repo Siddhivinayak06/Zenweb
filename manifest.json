@@ -11,7 +11,9 @@
     "contextMenus"
   ],
   "host_permissions": [
-    "<all_urls>"
+    "<all_urls>",
+    "http://localhost/*",
+    "http://127.0.0.1/*"
   ],
   "action": {
     "default_title": "Open ZenWeb Side Panel",
@@ -27,6 +29,9 @@
   "background": {
     "service_worker": "background.js"
   },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; connect-src 'self' https://vlguestftwnsvtdhfcbb.supabase.co https://generativelanguage.googleapis.com https://fonts.googleapis.com https://api.stripe.com https://m.stripe.network; frame-src https://js.stripe.com https://hooks.stripe.com"
+  },
   "content_scripts": [
     {
       "matches": [
@@ -34,6 +39,7 @@
       ],
       "js": [
         "lib/Readability.js",
+        "modules/auth.js",
         "modules/profiles.js",
         "modules/cognitive-scorer.js",
         "modules/analytics.js",
@@ -41,6 +47,8 @@
         "modules/theme.js",
         "modules/speech.js",
         "modules/ai.js",
+        "modules/bionic.js",
+        "modules/form-wizard.js",
         "modules/reader.js",
         "modules/focus.js",
         "content.js"
@@ -65,6 +73,13 @@
         "mac": "Command+Shift+F"
       },
       "description": "Toggle Focus Mode"
+    },
+    "_execute_side_panel": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+E",
+        "mac": "Command+Shift+E"
+      },
+      "description": "Open ZenWeb Side Panel"
     }
   },
   "icons": {

@@ -1,7 +1,11 @@
+// Note: AuthManager is removed from here as it is centralized in Background Script.
+// We communicate with background for auth checks.
+
 class ContextAwareController {
     constructor() {
-        this.mode = 'none'; // 'none', 'simplify', 'focus'
-
+        // Support both modes simultaneously
+        this.simplifyActive = false;
+        this.focusActive = false;
         // Initialize Modules
         this.profileManager = new ProfileManager();
         this.cognitiveScorer = new CognitiveLoadScorer();
@@ -10,12 +14,70 @@ class ContextAwareController {
         this.themeManager = new ThemeManager();
         this.speechManager = new SpeechManager();
         this.aiManager = new AIManager();
-        this.readerManager = new ReaderManager(this.themeManager, this.speechManager);
+        this.bionicManager = new BionicManager();
+        this.formWizard = new FormWizard();
+        this.readerManager = new ReaderManager(this.themeManager, this.speechManager, this.bionicManager);
         this.focusManager = new FocusManager(this.themeManager);
+
+        // Upsell Manager (Freemium)
+        this.checkForComplexForms();
+    }
+
+    // ... checkForComplexForms ... (Kept as is, not shown for brevity in replacement but assumed present if I match correctly)
+    // Actually replace only changed parts if possible, but class structure makes it hard.
+
+    checkForComplexForms() {
+        const forms = document.querySelectorAll('form');
+        forms.forEach(form => {
+            const inputs = form.querySelectorAll('input:not([type="hidden"]), select, textarea');
+            if (inputs.length > 8) {
+                this.showContextualUpsell(form);
+            }
+        });
+    }
+
+    showContextualUpsell(form) {
+        if (form.dataset.zenwebUpsell) return;
+        form.dataset.zenwebUpsell = 'true';
+
+        const banner = document.createElement('div');
+        banner.className = 'zenweb-upsell-banner';
+        banner.innerHTML = `
+            <div class="upsell-content">
+                <span class="upsell-icon">✨</span>
+                <div class="upsell-text">
+                    <strong>Complex Form Detected</strong>
+                    <span>Switch to Wizard Mode for step-by-step guidance.</span>
+                </div>
+                <button class="upsell-btn">Try Free</button>
+                <button class="upsell-close">×</button>
+            </div>
+        `;
+
+        form.style.position = 'relative';
+        banner.style.position = 'absolute';
+        banner.style.top = '-60px';
+        banner.style.left = '0';
+        banner.style.width = '100%';
+        banner.style.zIndex = '1000';
+        form.insertBefore(banner, form.firstChild);
+
+        banner.querySelector('.upsell-close').addEventListener('click', (e) => {
+            e.preventDefault();
+            banner.remove();
+        });
+
+        banner.querySelector('.upsell-btn').innerText = 'Start Wizard ✨';
+        banner.querySelector('.upsell-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            this.formWizard.start(form);
+            banner.remove();
+        });
     }
 
     async init() {
         // Initialize modules
+        // Auth is now managed by Background
         await this.profileManager.init();
         await this.analyticsManager.init();
 
@@ -24,7 +86,6 @@ class ContextAwareController {
 
         // Load and apply ad blocker preference
         chrome.storage.local.get(['adBlockerEnabled'], (result) => {
-            // Enable by default if not set
             if (result.adBlockerEnabled !== false) {
                 this.adBlocker.enable();
             }
@@ -37,27 +98,25 @@ class ContextAwareController {
             this.updateFocusManagerFromProfile();
         }
 
-        // Load Global Preferences
         chrome.storage.local.get(['dyslexiaFont'], (result) => {
             if (result.dyslexiaFont) {
                 document.body.classList.add('context-aware-dyslexia-font');
             }
         });
 
-        // Calculate initial cognitive score after page loads
         setTimeout(() => this.calculateAndStoreCognitiveScore(), 2000);
 
-        // Listen for profile changes
         document.addEventListener('zenweb:profile-applied', (e) => {
             this.updateFocusManagerFromProfile();
             this.analyticsManager.trackProfileUsage(e.detail.profileId);
         });
 
-        // Listen for internal events
         document.addEventListener('zenweb:close-reader', () => this.reset());
         document.addEventListener('zenweb:toast', (e) => this.showToast(e.detail.message));
 
         chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+            // AUTH HANDLERS REMOVED (Handled by Background)
+
             if (request.action === 'enable_simplify') {
                 this.enableSimplify();
                 this.showToast('Simplify Mode Enabled');
@@ -74,13 +133,53 @@ class ContextAwareController {
                 this.toggleFocus();
                 this.showToast(this.mode === 'focus' ? 'Focus Mode On' : 'Focus Mode Off');
                 sendResponse({ status: 'Toggled Focus' });
+            } else if (request.action === 'toggle_pause') {
+                const isPaused = document.getElementById('zenweb-pause-styles');
+                if (isPaused) {
+                    this.adBlocker.resumeAnimations();
+                    this.showToast('World Resumed ▶️');
+                    sendResponse({ paused: false });
+                } else {
+                    this.adBlocker.pauseAnimations();
+                    this.showToast('World Paused ⏸️');
+                    sendResponse({ paused: true });
+                }
             } else if (request.action === 'reset') {
                 this.reset();
                 sendResponse({ status: 'Reset' });
             } else if (request.action === 'summarize') {
-                this.analyticsManager.trackAIUsage('summary');
-                this.aiManager.summarizePage().then(summary => {
-                    sendResponse({ summary: summary });
+                // Rate Limit Check via Background
+                chrome.runtime.sendMessage({ action: 'check_usage_limit', feature: 'ai_summary' }, (limitCheck) => {
+                    if (!limitCheck.allowed) {
+                        sendResponse({ limitReached: true, limit: limitCheck.limit });
+                        return;
+                    }
+
+                    this.analyticsManager.trackAIUsage('summary');
+                    this.aiManager.summarizePage().then(summary => {
+                        // Track usage after success
+                        chrome.runtime.sendMessage({ action: 'track_usage', feature: 'ai_summary' });
+
+                        // We need user status to calculate remaining
+                        chrome.runtime.sendMessage({ action: 'get_user_status' }, (user) => {
+                            const remaining = user && user.plan === 'free' ? (limitCheck.limit - (limitCheck.current + 1)) : 'Unlimited';
+                            sendResponse({ summary: summary, remaining: remaining });
+                        });
+                    });
+                });
+                return true; // Async
+            } else if (request.action === 'extract_actions') {
+                // Check Pro Status via Background
+                chrome.runtime.sendMessage({ action: 'get_user_status' }, (user) => {
+                    if (!user || user.plan !== 'pro') {
+                        sendResponse({ error: 'Upgrade to Pro to use this feature.' });
+                        return;
+                    }
+                    this.analyticsManager.trackAIUsage('action_items');
+                    const text = request.text || document.body.innerText;
+                    this.aiManager.extractActionItems(text).then(actions => {
+                        sendResponse({ actions: actions });
+                    });
                 });
                 return true; // Async
             } else if (request.action === 'enable_dyslexia') {
@@ -89,15 +188,30 @@ class ContextAwareController {
             } else if (request.action === 'disable_dyslexia') {
                 document.body.classList.remove('context-aware-dyslexia-font');
                 sendResponse({ status: 'Dyslexia Mode Disabled' });
+            } else if (request.action === 'enable_bionic') {
+                this.bionicManager.enable();
+                this.readerManager.setBionicReading(true);
+                this.showToast('Bionic Reading Enabled');
+                sendResponse({ status: 'Bionic Reading Enabled' });
+            } else if (request.action === 'disable_bionic') {
+                this.bionicManager.disable();
+                this.readerManager.setBionicReading(false);
+                this.showToast('Bionic Reading Disabled');
+                sendResponse({ status: 'Bionic Reading Disabled' });
             } else if (request.action === 'get_status') {
                 const lastScore = this.cognitiveScorer.getLastScore();
+                // Get User Status from Background? Or just send local data?
+                // get_status is often used for popup init which is fast.
+                // We'll skip user in this response for now as sidepanel fetches it separately via 'get_user_status'
                 sendResponse({
-                    mode: this.mode,
+                    mode: this.getCurrentMode(),
+                    simplifyActive: this.simplifyActive,
+                    focusActive: this.focusActive,
                     activeProfile: this.profileManager.activeProfile,
                     cognitiveScore: lastScore ? lastScore.score : null,
                     cognitiveLevel: lastScore ? lastScore.level : null,
                     hiddenCount: 0,
-                    observerActive: this.mode !== 'none'
+                    observerActive: this.simplifyActive || this.focusActive
                 });
             } else if (request.action.startsWith('set_theme_')) {
                 sendResponse({ status: 'Theme Updated' });
@@ -108,12 +222,12 @@ class ContextAwareController {
                 this.setProfile(request.profileId).then(() => {
                     sendResponse({ status: 'Profile Set', profileId: request.profileId });
                 });
-                return true; // Async
+                return true;
             } else if (request.action === 'clear_profile') {
                 this.clearProfile().then(() => {
                     sendResponse({ status: 'Profile Cleared' });
                 });
-                return true; // Async
+                return true;
             } else if (request.action === 'get_profiles') {
                 sendResponse({
                     profiles: this.profileManager.getProfiles(),
@@ -126,23 +240,20 @@ class ContextAwareController {
                     }
                     sendResponse({ status: 'Custom Profile Updated' });
                 });
-                return true; // Async
+                return true;
             } else if (request.action === 'get_cognitive_score') {
-                // Return cached score or calculate new one
                 this.getCognitiveScore().then(score => {
                     sendResponse(score);
                 });
-                return true; // Async
+                return true;
             } else if (request.action === 'recalculate_cognitive_score') {
-                // Force recalculation
                 this.cognitiveScorer.clearCache();
                 this.getCognitiveScore().then(score => {
                     sendResponse(score);
                 });
-                return true; // Async
+                return true;
             } else if (request.action === 'chat_with_page') {
                 this.analyticsManager.trackAIUsage('chat');
-                // Let background handle this, but track it
                 sendResponse({ status: 'tracked' });
             } else if (request.action === 'toggle_adblocker') {
                 const isEnabled = this.adBlocker.toggle();
@@ -202,7 +313,6 @@ class ContextAwareController {
             this.showToast(`${profile.icon} ${profile.name} Active`);
             this.analyticsManager.trackProfileUsage(profileId);
 
-            // Auto-enable focus mode for profiles that have it
             if (profile.settings.autoFocus && this.mode !== 'focus') {
                 this.enableFocus();
             }
@@ -220,52 +330,75 @@ class ContextAwareController {
         const settings = this.profileManager.getActiveSettings();
         if (!settings) return;
 
-        // Update Focus Manager timer duration based on profile
         if (settings.timerDuration && this.focusManager) {
             this.focusManager.timeLeft = settings.timerDuration * 60;
+        }
+
+        if (settings.dimIntensity) {
+            document.documentElement.style.setProperty('--zenweb-focus-opacity', settings.dimIntensity);
+        } else {
+            document.documentElement.style.removeProperty('--zenweb-focus-opacity');
+        }
+
+        if (settings.reduceClutter) {
+            this.adBlocker.enable();
         }
     }
 
     toggleSimplify() {
-        if (this.mode === 'simplify') {
-            this.reset();
+        if (this.simplifyActive) {
+            this.disableSimplify();
         } else {
             this.enableSimplify();
         }
     }
 
     toggleFocus() {
-        if (this.mode === 'focus') {
-            this.reset();
+        if (this.focusActive) {
+            this.disableFocus();
         } else {
             this.enableFocus();
         }
     }
 
     reset() {
-        this.readerManager.disable();
-        this.focusManager.disable();
+        this.disableSimplify();
+        this.disableFocus();
         this.speechManager.stop();
-        this.mode = 'none';
-
-        // Remove legacy classes just in case
         document.body.classList.remove('context-aware-simplify', 'context-aware-focus');
     }
 
+    getCurrentMode() {
+        if (this.simplifyActive && this.focusActive) return 'both';
+        if (this.simplifyActive) return 'simplify';
+        if (this.focusActive) return 'focus';
+        return 'none';
+    }
+
     enableSimplify() {
-        if (this.mode === 'simplify') return;
-        this.reset(); // Clear other modes
-        this.mode = 'simplify';
+        if (this.simplifyActive) return;
+        this.simplifyActive = true;
         this.readerManager.enable();
         this.analyticsManager.trackModeActivation('simplify');
     }
 
+    disableSimplify() {
+        if (!this.simplifyActive) return;
+        this.simplifyActive = false;
+        this.readerManager.disable();
+    }
+
     enableFocus() {
-        if (this.mode === 'focus') return;
-        this.reset();
-        this.mode = 'focus';
+        if (this.focusActive) return;
+        this.focusActive = true;
         this.focusManager.enable();
         this.analyticsManager.trackModeActivation('focus');
+    }
+
+    disableFocus() {
+        if (!this.focusActive) return;
+        this.focusActive = false;
+        this.focusManager.disable();
     }
 
     showToast(message) {

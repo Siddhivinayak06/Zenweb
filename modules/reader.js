@@ -1,9 +1,11 @@
 class ReaderManager {
-    constructor(themeManager, speechManager) {
+    constructor(themeManager, speechManager, bionicManager) {
         this.isActive = false;
         this.themeManager = themeManager;
         this.speechManager = speechManager;
+        this.bionicManager = bionicManager; // Shared manager
         this.preferredFontSize = 20;
+        this.bionicEnabled = false;
     }
 
     init() {
@@ -153,6 +155,18 @@ class ReaderManager {
         // Apply Theme
         this.themeManager.syncOverlayTheme(overlay);
 
+        // Add Reading Time Badge
+        const toolbar = overlay.querySelector('.context-aware-reader-toolbar');
+        this.injectReadingTimeBadge(toolbar, article.textContent);
+
+        // Apply Bionic Reading if enabled
+        chrome.storage.local.get(['bionicReading'], (result) => {
+            if (result.bionicReading) {
+                this.bionicEnabled = true;
+                this.applyBionicReading(contentContainer);
+            }
+        });
+
 
         // Keyboard Shortcuts
         this.shortcutHandler = (e) => {
@@ -285,6 +299,77 @@ class ReaderManager {
         allElements.forEach(el => {
             el.classList.add('context-aware-reader-child');
         });
+    }
+
+    /**
+     * Calculate estimated reading time based on word count
+     * Average reading speed: 200-250 words per minute
+     */
+    calculateReadingTime(text) {
+        if (!text) return null;
+        const words = text.trim().split(/\s+/).length;
+        const minutes = Math.ceil(words / 225); // Using 225 WPM as average
+        return {
+            minutes,
+            words,
+            label: minutes === 1 ? '1 min read' : `${minutes} min read`
+        };
+    }
+
+    /**
+     * Apply bionic reading formatting to text content via shared manager
+     */
+    applyBionicReading(container) {
+        if (this.bionicManager) {
+            this.bionicManager.applyBionicReading(container);
+        }
+    }
+
+    /**
+     * Remove bionic reading formatting via shared manager
+     */
+    removeBionicReading(container) {
+        if (this.bionicManager) {
+            this.bionicManager.removeBionicReading(container);
+        }
+    }
+
+    /**
+     * Toggle bionic reading on/off
+     */
+    setBionicReading(enabled) {
+        this.bionicEnabled = enabled;
+
+        const contentContainer = document.querySelector('.context-aware-reader-content');
+        if (!contentContainer) return;
+
+        if (enabled) {
+            this.applyBionicReading(contentContainer);
+        } else {
+            this.removeBionicReading(contentContainer);
+        }
+    }
+
+    /**
+     * Inject reading time badge into toolbar
+     */
+    injectReadingTimeBadge(toolbar, text) {
+        const readingTime = this.calculateReadingTime(text);
+        if (!readingTime || !toolbar) return;
+
+        // Remove existing badge if any
+        const existingBadge = toolbar.querySelector('.reading-time-badge');
+        if (existingBadge) existingBadge.remove();
+
+        const badge = document.createElement('span');
+        badge.className = 'reading-time-badge';
+        badge.innerHTML = `<span class="time-icon">⏱️</span> ${readingTime.label}`;
+        badge.title = `${readingTime.words} words`;
+
+        const controls = toolbar.querySelector('.context-aware-reader-controls');
+        if (controls) {
+            controls.appendChild(badge);
+        }
     }
 }
 

@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upgrade to ContextAware Pro</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --accent: #f43f5e;
+            --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+            --card-bg: rgba(255, 255, 255, 0.8);
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: rgba(226, 232, 240, 0.8);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 42px;
+            font-weight: 800;
+            margin: 0 0 16px 0;
+            background: linear-gradient(135deg, #1e293b 0%, #6366f1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 20px;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .plan-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 40px;
+            backdrop-filter: blur(12px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .plan-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.1);
+        }
+
+        .plan-card.pro {
+            border: 2px solid var(--primary);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(238, 242, 255, 0.9) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .plan-card.pro::before {
+            content: 'MOST POPULAR';
+            position: absolute;
+            top: 20px;
+            right: -30px;
+            background: var(--primary);
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 5px 30px;
+            transform: rotate(45deg);
+        }
+
+        .plan-name {
+            font-family: 'Outfit', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .plan-price {
+            font-size: 48px;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 20px;
+        }
+
+        .plan-period {
+            font-size: 16px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .features-list {
+            list-style: none;
+            padding: 0;
+            margin: 30px 0;
+            font-size: 15px;
+        }
+
+        .features-list li {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .check {
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        .cross {
+            color: var(--text-muted);
+            opacity: 0.5;
+        }
+
+        .cta-btn {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .btn-free {
+            background: #f1f5f9;
+            color: var(--text-main);
+        }
+
+        .btn-free:hover {
+            background: #e2e8f0;
+        }
+
+        .btn-pro {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-pro:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        /* Comparison Table */
+        .comparison-section {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 28px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 20px;
+            border-bottom: 2px solid #f1f5f9;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        td {
+            padding: 20px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        th:nth-child(2),
+        th:nth-child(3),
+        td:nth-child(2),
+        td:nth-child(3) {
+            text-align: center;
+        }
+
+        .feature-icon {
+            margin-right: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Unlock Your Full Potential</h1>
+            <p class="subtitle">Accessibility is a right. Productivity is a service.<br>Choose the plan that fits your
+                cognitive needs.</p>
+        </header>
+
+        <div class="pricing-grid">
+            <!-- Free Plan -->
+            <div class="plan-card">
+                <div class="plan-name">Essential</div>
+                <div class="plan-price">Free<span class="plan-period">/forever</span></div>
+                <p style="color: var(--text-muted); margin-bottom: 20px;">For students & casual readers who need a
+                    distraction-free web.</p>
+                <a href="#" class="cta-btn btn-free">Current Plan</a>
+
+                <ul class="features-list">
+                    <li><span class="check">✓</span> Simplify Mode (Reader View)</li>
+                    <li><span class="check">✓</span> Focus Mode (Spotlight)</li>
+                    <li><span class="check">✓</span> Ad & Clutter Blocking</li>
+                    <li><span class="check">✓</span> Dyslexia Fonts & Themes</li>
+                    <li><span class="check">✓</span> 5 AI Summaries / month</li>
+                    <li><span class="cross">✕</span> Unlimited AI Features</li>
+                </ul>
+            </div>
+
+            <!-- Pro Plan -->
+            <div class="plan-card pro">
+                <div class="plan-name">Context+</div>
+                <div class="plan-price">₹499<span class="plan-period">/mo</span></div>
+                <p style="color: var(--text-muted); margin-bottom: 20px;">For professionals & researchers who need
+                    powerful cognitive tools.</p>
+                <a href="#" id="btn-upgrade-pro" class="cta-btn btn-pro">Upgrade Now</a>
+
+                <ul class="features-list">
+                    <li><span class="check">✓</span> <strong>Everything in Essential</strong></li>
+                    <li><span class="check">✓</span> Unlimited AI Summaries & Chat</li>
+                    <li><span class="check">✓</span> Action Item Extraction (Tasks)</li>
+                    <li><span class="check">✓</span> Smart Form Wizard</li>
+                    <li><span class="check">✓</span> Export to Notion/Todoist</li>
+                    <li><span class="check">✓</span> Cross-Device Sync</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="comparison-section">
+            <h2>Feature Comparison</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Essential (Free)</th>
+                        <th>Context+ (Pro)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Ad & Clutter Removal</td>
+                        <td>✅ Unlimited</td>
+                        <td>✅ Unlimited</td>
+                    </tr>
+                    <tr>
+                        <td>Dyslexia Fonts & Themes</td>
+                        <td>✅ Unlimited</td>
+                        <td>✅ Unlimited</td>
+                    </tr>
+                    <tr>
+                        <td>Focus Mode (Spotlight)</td>
+                        <td>✅ Unlimited</td>
+                        <td>✅ Unlimited</td>
+                    </tr>
+                    <tr>
+                        <td>Article Summaries (AI)</td>
+                        <td>5 / month</td>
+                        <td>✅ Unlimited</td>
+                    </tr>
+                    <tr>
+                        <td>Action Item Extractor</td>
+                        <td>❌</td>
+                        <td>✅ Unlimited</td>
+                    </tr>
+                    <tr>
+                        <td>Task Export (Notion/Cal)</td>
+                        <td>❌</td>
+                        <td>✅ Yes</td>
+                    </tr>
+                    <tr>
+                        <td>Smart Form Wizard</td>
+                        <td>Basic</td>
+                        <td>✅ AI-Powered</td>
+                    </tr>
+                    <tr>
+                        <td>Cross-Device Sync</td>
+                        <td>❌</td>
+                        <td>✅ Yes</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Stripe JS -->
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="config.js"></script>
+
+    <script>
+        const stripeKey = window.ZenWebConfig?.STRIPE_PUBLISHABLE_KEY;
+        const priceId = window.ZenWebConfig?.STRIPE_PRICE_ID;
+        let stripe;
+
+        if (stripeKey) {
+            stripe = Stripe(stripeKey);
+        } else {
+            console.error("ZenWeb: Stripe Key missing in config");
+        }
+
+        // 1. Handle Upgrade Click
+        document.getElementById('btn-upgrade-pro').addEventListener('click', async (e) => {
+            e.preventDefault();
+            const btn = e.target;
+            btn.textContent = "Loading Stripe...";
+            btn.disabled = true;
+
+            try {
+                // Determine Success/Cancel URLs
+                // Since this is a static file, we can just reload it with params
+                const currentUrl = window.location.href.split('?')[0];
+                const successUrl = `${currentUrl}?session_id={CHECKOUT_SESSION_ID}&success=true`;
+                const cancelUrl = `${currentUrl}?canceled=true`;
+
+                const { error } = await stripe.redirectToCheckout({
+                    lineItems: [{ price: priceId, quantity: 1 }],
+                    mode: 'subscription',
+                    successUrl: successUrl,
+                    cancelUrl: cancelUrl,
+                });
+
+                if (error) {
+                    console.error("Stripe Error:", error);
+                    alert("Payment Error: " + error.message);
+                    btn.textContent = "Upgrade Now";
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                console.error("Checkout Error:", err);
+                alert("Failed to start checkout. Check console.");
+                btn.textContent = "Upgrade Now";
+                btn.disabled = false;
+            }
+        });
+
+        // 2. Handle Return from Stripe
+        const urlParams = new URLSearchParams(window.location.search);
+
+        if (urlParams.get('success') === 'true') {
+            const sessionId = urlParams.get('session_id');
+            // Simulate Fulfillment
+            document.body.innerHTML = `
+                <div class="container" style="text-align:center; padding-top:100px;">
+                    <h1 style="color:#10b981">Payment Successful! 🎉</h1>
+                    <p class="subtitle">Activating your Pro license...</p>
+                    <div class="spinner" style="font-size:40px">⏳</div>
+                </div>
+            `;
+
+            // Call Background to upgrade user
+            chrome.runtime.sendMessage({ action: 'simulate_upgrade' }, (response) => {
+                if (response.success) {
+                    setTimeout(() => {
+                        document.body.innerHTML = `
+                            <div class="container" style="text-align:center; padding-top:100px;">
+                                <h1 style="color:#10b981">You are now Pro! 🚀</h1>
+                                <p class="subtitle">Close this tab and refresh the extension.</p>
+                                <button onclick="window.close()" class="cta-btn btn-pro" style="max-width:200px; margin:20px auto;">Close Page</button>
+                            </div>
+                        `;
+                    }, 2000);
+                } else {
+                    alert("Payment succeeded but activation failed: " + (response.error || 'Unknown error'));
+                }
+            });
+        }
+
+        if (urlParams.get('canceled') === 'true') {
+            alert("Payment canceled. You have not been charged.");
+        }
+    </script>
+</body>
+
+</html>
