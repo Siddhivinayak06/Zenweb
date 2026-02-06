@@ -20,7 +20,7 @@ class ProfileManager {
                     hideAutoplay: true,
                     highlightCurrentParagraph: true,
                     reduceClutter: true,
-                    useBionicReading: true,
+                    useBionicReading: false,
                     fontSize: 16,
                     lineSpacing: 1.6
                 }
@@ -38,8 +38,8 @@ class ProfileManager {
                     hideAutoplay: false,
                     highlightCurrentParagraph: true,
                     reduceClutter: false,
-                    useDyslexiaFont: true,
-                    useBionicReading: true,
+                    useDyslexiaFont: false,
+                    useBionicReading: false,
                     fontSize: 18,
                     lineSpacing: 1.8,
                     letterSpacing: 0.12,
@@ -79,7 +79,7 @@ class ProfileManager {
                     hideAutoplay: true,
                     highlightCurrentParagraph: true,
                     reduceClutter: true,
-                    useBionicReading: true,
+                    useBionicReading: false,
                     fontSize: 18,
                     lineSpacing: 1.7,
                     stepByStep: true
@@ -104,6 +104,26 @@ class ProfileManager {
                     fontSize: 16,
                     lineSpacing: 1.5,
                     autoMuteMedia: true
+                }
+            },
+            autism: {
+                id: 'autism',
+                name: 'Autism Mode',
+                icon: '🧩',
+                description: 'Sensory-friendly with muted overlay and page freezer',
+                settings: {
+                    autoFocus: false,
+                    timerDuration: 20,
+                    dimIntensity: 0.8,
+                    hideAnimations: true,
+                    hideAutoplay: true,
+                    highlightCurrentParagraph: false,
+                    reduceClutter: true,
+                    mutedOverlay: true,
+                    pageFreezer: true,
+                    mutedColors: true,
+                    fontSize: 16,
+                    lineSpacing: 1.6
                 }
             },
             custom: {

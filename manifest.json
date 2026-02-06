@@ -52,6 +52,7 @@
         "modules/reader.js",
         "modules/focus.js",
         "modules/fatigue.js",
+        "modules/autism.js",
         "content.js"
       ],
       "css": [

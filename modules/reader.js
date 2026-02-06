@@ -1,9 +1,10 @@
 class ReaderManager {
-    constructor(themeManager, speechManager, bionicManager) {
+    constructor(themeManager, speechManager, bionicManager, aiManager) {
         this.isActive = false;
         this.themeManager = themeManager;
         this.speechManager = speechManager;
         this.bionicManager = bionicManager; // Shared manager
+        this.aiManager = aiManager;
         this.preferredFontSize = 20;
         this.bionicEnabled = false;
         this.stepByStepActive = false;
@@ -134,6 +135,7 @@ class ReaderManager {
                     <button id="reader-font-decrease" title="Decrease Font">A-</button>
                     <button id="reader-font-increase" title="Increase Font">A+</button>
                     <button id="reader-speech-toggle" title="Read Aloud"><span class="icon-speech">🔊</span></button>
+                    <button id="reader-simplify-lang-toggle" title="Simplify Vocabulary"><span class="icon-simplify">✨</span></button>
                 </div>
                 <button class="context-aware-reader-close" aria-label="Close">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -270,6 +272,11 @@ class ReaderManager {
         // Step-by-Step Navigation
         overlay.querySelector('#btn-step-prev')?.addEventListener('click', () => this.prevStep());
         overlay.querySelector('#btn-step-next')?.addEventListener('click', () => this.nextStep());
+
+        // Vocabulary Simplification
+        overlay.querySelector('#reader-simplify-lang-toggle')?.addEventListener('click', () => {
+            this.simplifyVocabulary();
+        });
     }
 
     enableStepByStep() {
@@ -462,6 +469,50 @@ class ReaderManager {
         const controls = toolbar.querySelector('.context-aware-reader-controls');
         if (controls) {
             controls.appendChild(badge);
+        }
+    }
+    /**
+     * AI-powered vocabulary simplification.
+     * Processes paragraphs one-by-one to replace complex words with simpler ones.
+     */
+    async simplifyVocabulary() {
+        if (!this.aiManager) return;
+
+        const contentContainer = document.querySelector('.context-aware-reader-content');
+        if (!contentContainer) return;
+
+        const blocks = contentContainer.querySelectorAll('p, li, blockquote');
+        const btn = document.getElementById('reader-simplify-lang-toggle');
+
+        if (btn) btn.classList.add('active');
+
+        for (let block of blocks) {
+            const text = block.innerText.trim();
+            if (text.length < 10) continue;
+
+            // Mark as simplifying
+            block.classList.add('zenweb-simplifying');
+
+            try {
+                const simplified = await this.aiManager.simplifyText(text);
+                if (simplified && simplified.length > 5 && simplified !== text) {
+                    block.innerText = simplified;
+                    // Re-apply bionic if it was active
+                    if (this.bionicEnabled) {
+                        this.bionicManager.applyBionicToElement(block);
+                    }
+                }
+            } catch (e) {
+                console.error("ZenWeb: Simplification failed for block", e);
+            } finally {
+                block.classList.remove('zenweb-simplifying');
+            }
+        }
+
+        if (btn) {
+            btn.classList.remove('active');
+            btn.innerHTML = '<span class="icon-simplify">✅</span>';
+            setTimeout(() => { btn.innerHTML = '<span class="icon-simplify">✨</span>'; }, 3000);
         }
     }
 }

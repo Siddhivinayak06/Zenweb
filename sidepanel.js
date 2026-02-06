@@ -274,7 +274,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (storageKey) {
       chrome.storage.local.set({ [storageKey]: enabled });
-      sendMessage(enabled ? `enable_font_${feature}` : `disable_font_${feature}`);
+
+      // Bionic uses different action names than font toggles
+      if (feature === 'bionic') {
+        sendMessage(enabled ? 'enable_bionic' : 'disable_bionic');
+      } else {
+        sendMessage(enabled ? `enable_${feature}` : `disable_${feature}`);
+      }
 
       // SYNC ALL UI
       syncUIFromStorage();
@@ -329,6 +335,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Update mode UI
       updateModeUI(response.mode, response);
+
+      // Sync autism tool states
+      if (response.mutedOverlay !== undefined) {
+        const overlayBtn = toolContainer.querySelector('[data-tool-key="overlay"]');
+        if (overlayBtn) overlayBtn.classList.toggle('active', response.mutedOverlay);
+      }
+      if (response.pageFreezer !== undefined) {
+        const freezerBtn = toolContainer.querySelector('[data-tool-key="freezer"]');
+        if (freezerBtn) freezerBtn.classList.toggle('active', response.pageFreezer);
+      }
 
       // Update ad blocker status
       sendMessage('get_adblocker_status', {}, (adResponse) => {
@@ -408,7 +424,9 @@ document.addEventListener('DOMContentLoaded', () => {
     bionic: { id: 'btn-bionic', icon: '🧬', label: 'Bionic Reading', type: 'toggle', action: 'toggle_bionic' },
     zoom: { id: 'btn-zoom', icon: '🔍', label: 'Text Size', type: 'range', action: 'set_zoom' },
     step: { id: 'btn-step', icon: '👣', label: 'Step Reading', type: 'toggle', action: 'toggle_step_by_step' },
-    fatigue: { id: 'btn-fatigue', icon: '🛡️', label: 'Fatigue Filter', type: 'toggle', action: 'toggle_fatigue_filter' }
+    fatigue: { id: 'btn-fatigue', icon: '🛡️', label: 'Fatigue Filter', type: 'toggle', action: 'toggle_fatigue_filter' },
+    overlay: { id: 'btn-overlay', icon: '🎨', label: 'Muted Overlay', type: 'toggle', action: 'toggle_muted_overlay' },
+    freezer: { id: 'btn-freezer', icon: '❄️', label: 'Page Freezer', type: 'toggle', action: 'toggle_page_freezer' }
   };
 
   // Profile Configurations
@@ -468,6 +486,17 @@ document.addEventListener('DOMContentLoaded', () => {
         { label: 'Aggressive Simplifier ✨', detail: 'Strips everything but the primary article content.' }
       ],
       tools: ['step', 'simplify', 'bionic']
+    },
+    autism: {
+      name: 'Autism Mode',
+      description: 'Sensory-friendly browsing.',
+      features: [
+        { label: 'Muted Overlay 🎨', detail: 'Applies a calming wheat-toned overlay at 20% opacity to reduce visual intensity.' },
+        { label: 'Page Freezer ❄️', detail: 'Stops all media, freezes GIFs, and disables scrolling for a completely static page.' },
+        { label: 'Blocked Animations 🚫', detail: 'Stops distracting CSS animations and transitions.' },
+        { label: 'Muted Colors 🌅', detail: 'Reduces color saturation for a gentler visual experience.' }
+      ],
+      tools: ['overlay', 'freezer', 'pause', 'simplify']
     }
   };
 
@@ -635,6 +664,14 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (tool.action === 'toggle_fatigue_filter') {
           const isActive = btn.classList.toggle('active');
           sendMessage(tool.action, { enabled: isActive });
+        } else if (tool.action === 'toggle_muted_overlay') {
+          sendMessage(tool.action, {}, (response) => {
+            if (response) btn.classList.toggle('active', response.enabled);
+          });
+        } else if (tool.action === 'toggle_page_freezer') {
+          sendMessage(tool.action, {}, (response) => {
+            if (response) btn.classList.toggle('active', response.enabled);
+          });
         } else if (tool.action === 'summarize') {
           const originalText = btn.innerHTML;
           btn.innerHTML = `<span class="quick-icon">⏳</span><span class="quick-label">Thinking...</span>`;

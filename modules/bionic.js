@@ -119,3 +119,7 @@ class BionicManager {
         container.normalize();
     }
 }
+
+if (typeof window !== 'undefined') {
+    window.BionicManager = BionicManager;
+}

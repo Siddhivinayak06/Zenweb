@@ -36,8 +36,9 @@ class ContextAwareController {
         this.aiManager = new AIManager();
         this.bionicManager = new BionicManager();
         this.fatigueManager = new FatigueManager();
+        this.autismManager = new AutismManager();
         this.formWizard = new FormWizard();
-        this.readerManager = new ReaderManager(this.themeManager, this.speechManager, this.bionicManager);
+        this.readerManager = new ReaderManager(this.themeManager, this.speechManager, this.bionicManager, this.aiManager);
         this.focusManager = new FocusManager(this.themeManager);
 
         // Upsell Manager (Freemium)
@@ -117,6 +118,7 @@ class ContextAwareController {
         if (activeProfile) {
             this.profileManager.applyProfileToPage();
             this.updateFocusManagerFromProfile();
+            this.updateAutismFromProfile(activeProfile.settings);
         }
 
         this.syncPersonalPreferences();
@@ -241,6 +243,8 @@ class ContextAwareController {
                     simplifyActive: this.simplifyActive,
                     focusActive: this.focusActive,
                     activeProfile: this.profileManager.activeProfile,
+                    mutedOverlay: this.autismManager?.isOverlayEnabled() || false,
+                    pageFreezer: this.autismManager?.isFreezerEnabled() || false,
                     cognitiveScore: lastScore ? lastScore.score : null,
                     cognitiveLevel: lastScore ? lastScore.level : null,
                     hiddenCount: 0,
@@ -312,6 +316,14 @@ class ContextAwareController {
                     enabled: this.adBlocker.isEnabled(),
                     hiddenCount: this.adBlocker.getHiddenCount()
                 });
+            } else if (request.action === 'toggle_muted_overlay') {
+                const isActive = this.autismManager.toggleOverlay();
+                this.showToast(isActive ? '🎨 Muted Overlay On' : 'Muted Overlay Off');
+                sendResponse({ enabled: isActive });
+            } else if (request.action === 'toggle_page_freezer') {
+                const isActive = this.autismManager.toggleFreezer();
+                this.showToast(isActive ? '❄️ Page Frozen' : 'Page Unfrozen');
+                sendResponse({ enabled: isActive });
             }
         });
     }
@@ -427,6 +439,19 @@ class ContextAwareController {
         }
     }
 
+    updateAutismFromProfile(settings) {
+        if (settings.mutedOverlay) {
+            this.autismManager.enableOverlay();
+        } else {
+            this.autismManager.disableOverlay();
+        }
+        if (settings.pageFreezer) {
+            this.autismManager.enableFreezer();
+        } else {
+            this.autismManager.disableFreezer();
+        }
+    }
+
     toggleSimplify() {
         if (this.simplifyActive) {
             this.disableSimplify();
@@ -495,9 +520,10 @@ class ContextAwareController {
         toast.classList.add('show');
 
         if (this.toastTimeout) clearTimeout(this.toastTimeout);
+        const duration = this.profileManager.activeProfile === 'autism' ? 15000 : 2000;
         this.toastTimeout = setTimeout(() => {
             toast.classList.remove('show');
-        }, 2000);
+        }, duration);
     }
 }
 

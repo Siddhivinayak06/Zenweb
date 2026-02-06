@@ -1,5 +1,5 @@
 /**
- * ZenWeb Landing – Smooth scroll & fade-in on scroll
+ * ZenWeb Landing – Smooth scroll, fade-in, disorder card interactions
  */
 
 (function () {
@@ -18,16 +18,39 @@
         });
     });
 
+    // Disorder card interactions – click to expand/collapse
+    const disorderCards = document.querySelectorAll('.disorder-card');
+    const disorderPanels = document.querySelectorAll('.disorder-features__panel');
+
+    disorderCards.forEach(function (card) {
+        card.addEventListener('click', function () {
+            const disorder = this.getAttribute('data-disorder');
+            const panelId = disorder + '-features';
+            const panel = document.getElementById(panelId);
+            const isExpanded = this.getAttribute('aria-expanded') === 'true';
+
+            // Hide all panels and deactivate all cards
+            disorderPanels.forEach(function (p) {
+                p.hidden = true;
+            });
+            disorderCards.forEach(function (c) {
+                c.setAttribute('aria-expanded', 'false');
+                c.classList.remove('active');
+            });
+
+            // If was collapsed, show this panel; otherwise leave all hidden
+            if (!isExpanded && panel) {
+                panel.hidden = false;
+                this.setAttribute('aria-expanded', 'true');
+                this.classList.add('active');
+            }
+        });
+    });
+
     // Fade-in on scroll
     const fadeElements = document.querySelectorAll(
-        '.about__card, .feature-card, .how__step, .a11y__content, .section--opensource .container > *, .section--cta .container'
+        '.about__content, .disorder-cards, .disorder-feature, .how__step, .a11y__content, .section--opensource .container > *, .section--cta .container'
     );
-
-    function addFadeClass() {
-        fadeElements.forEach(function (el) {
-            el.classList.add('fade-in');
-        });
-    }
 
     function observeFade() {
         const observer = new IntersectionObserver(
@@ -47,7 +70,6 @@
         });
     }
 
-    // Respect reduced motion
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReducedMotion) {
         fadeElements.forEach(function (el) {

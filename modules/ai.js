@@ -80,7 +80,7 @@ class AIManager {
     }
 
     async simplifyText(text) {
-        const prompt = `Rewrite the following text at a 5th-grade reading level. Keep it concise:\n\n${text}`;
+        const prompt = `Rewrite the following text to be extremely easy to understand. Disintegrate big, complex words into short, simple, and understandable words. Maintain the original meaning but reduce cognitive load significantly. Keep it concise:\n\n${text}`;
         return await this.callOllama(prompt);
     }
 

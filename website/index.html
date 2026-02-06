@@ -10,9 +10,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Open+Sans:wght@400;500;600&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&family=Open+Sans:wght@400;500;600&family=Roboto:wght@400;500&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -22,96 +22,177 @@
             <h1 class="hero__title">ZenWeb Browser Assistant</h1>
             <p class="hero__tagline">Reduce Cognitive Load. Stay Focused. Browse Calmly.</p>
             <p class="hero__description">
-                A Chrome extension that simplifies overwhelming websites for users with ADHD, dyslexia, autism, and
-                cognitive disabilities.
+                Modern websites overwhelm us with pop-ups, ads, and dense layouts. ZenWeb strips away the noise so you
+                can read, work, and browse without the cognitive overload.
             </p>
             <div class="hero__cta">
                 <a href="https://chrome.google.com/webstore" target="_blank" rel="noopener noreferrer"
-                    class="btn btn--primary">Download</a>
-                <a href="#features" class="btn btn--secondary">Explore Features</a>
-                <a href="pricing.html" class="btn btn--outline">Pricing</a>
+                    class="btn btn--primary">DOWNLOAD</a>
+                <a href="#disorders" class="btn btn--secondary">Explore Features</a>
             </div>
         </div>
     </header>
 
     <main>
-        <!-- About -->
+        <!-- About ZenWeb -->
         <section class="section section--about" id="about" aria-labelledby="about-heading">
             <div class="container">
-                <h2 id="about-heading" class="section__title">Why ZenWeb?</h2>
-                <div class="about__grid">
-                    <div class="about__card about__card--problem">
-                        <h3 class="about__subtitle">The Problem</h3>
-                        <p>Modern websites bombard users with pop-ups, autoplay videos, flashing ads, and dense layouts.
-                            For people with cognitive differences, this creates anxiety, distraction, and mental
-                            overload—making simple browsing tasks exhausting.</p>
-                    </div>
-                    <div class="about__card about__card--solution">
-                        <h3 class="about__subtitle">Our Solution</h3>
-                        <p>ZenWeb strips away the noise. Simplify mode declutters pages. Focus mode highlights what
-                            matters. AI summaries, dyslexia-friendly fonts, and keyboard shortcuts put you in control.
-                            Browse the web on your terms.</p>
-                    </div>
+                <h2 id="about-heading" class="section__title">About ZenWeb</h2>
+                <div class="about__content">
+                    <p class="about__text"><strong>What it is:</strong> ZenWeb is a Chrome extension that simplifies web
+                        pages—removing clutter, enabling focus modes, and offering AI summaries and assistive tools.</p>
+                    <p class="about__text"><strong>Who it's for:</strong> People with ADHD, dyslexia, autism, chronic
+                        fatigue,
+                        students, and professionals who need a calmer web experience.</p>
+                    <p class="about__text"><strong>Why cognitive-first accessibility matters:</strong> The web should
+                        adapt to people. ZenWeb puts neurodivergent and cognitively disabled users at the core,
+                        following WCAG guidelines and respecting reduced-motion preferences.</p>
                 </div>
             </div>
         </section>
 
-        <!-- Features -->
-        <section class="section section--features" id="features" aria-labelledby="features-heading">
+        <!-- Disorder Selection -->
+        <section class="section section--disorders" id="disorders" aria-labelledby="disorders-heading">
             <div class="container">
-                <h2 id="features-heading" class="section__title">Features</h2>
-                <div class="features__grid">
-                    <article class="feature-card">
-                        <div class="feature-card__icon" aria-hidden="true">◇</div>
-                        <h3 class="feature-card__title">Simplify Mode</h3>
-                        <p class="feature-card__desc">Declutter pages by hiding ads, sidebars, and non-essential
-                            elements.</p>
-                    </article>
-                    <article class="feature-card">
-                        <div class="feature-card__icon" aria-hidden="true">◎</div>
-                        <h3 class="feature-card__title">Focus Mode</h3>
-                        <p class="feature-card__desc">Highlight key content and dim distractions for laser focus.</p>
-                    </article>
-                    <article class="feature-card">
-                        <div class="feature-card__icon" aria-hidden="true">◈</div>
-                        <h3 class="feature-card__title">AI Summary</h3>
-                        <p class="feature-card__desc">Get instant AI-generated summaries of long articles.</p>
-                    </article>
-                    <article class="feature-card">
-                        <div class="feature-card__icon" aria-hidden="true">◆</div>
-                        <h3 class="feature-card__title">Chat with Page</h3>
-                        <p class="feature-card__desc">Ask questions about the page content via natural language.</p>
-                    </article>
-                    <article class="feature-card">
-                        <div class="feature-card__icon" aria-hidden="true">●</div>
-                        <h3 class="feature-card__title">Explain Selection</h3>
-                        <p class="feature-card__desc">Select any text and get plain-language explanations.</p>
-                    </article>
-                    <article class="feature-card">
-                        <div class="feature-card__icon" aria-hidden="true">◐</div>
-                        <h3 class="feature-card__title">Dyslexia Font</h3>
-                        <p class="feature-card__desc">Apply dyslexia-friendly typography across supported sites.</p>
-                    </article>
-                    <article class="feature-card">
-                        <div class="feature-card__icon" aria-hidden="true">♪</div>
-                        <h3 class="feature-card__title">Text-to-Speech</h3>
-                        <p class="feature-card__desc">Listen to page content read aloud with customizable voices.</p>
-                    </article>
-                    <article class="feature-card">
-                        <div class="feature-card__icon" aria-hidden="true">⌘</div>
-                        <h3 class="feature-card__title">Keyboard Shortcuts</h3>
-                        <p class="feature-card__desc">Navigate and control ZenWeb without touching the mouse.</p>
-                    </article>
-                    <article class="feature-card">
-                        <div class="feature-card__icon" aria-hidden="true">◉</div>
-                        <h3 class="feature-card__title">Custom Themes</h3>
-                        <p class="feature-card__desc">Choose calming color schemes that reduce visual stress.</p>
-                    </article>
-                    <article class="feature-card">
-                        <div class="feature-card__icon" aria-hidden="true">⏱</div>
-                        <h3 class="feature-card__title">Pomodoro Timer</h3>
-                        <p class="feature-card__desc">Built-in timer for structured focus and break intervals.</p>
-                    </article>
+                <h2 id="disorders-heading" class="section__title">Built for Your Needs</h2>
+                <div class="disorder-cards">
+                    <button type="button" class="disorder-card" data-disorder="adhd" aria-expanded="false"
+                        aria-controls="adhd-features" id="disorder-adhd">
+                        <span class="disorder-card__label">ADHD</span>
+                    </button>
+                    <button type="button" class="disorder-card" data-disorder="dyslexia" aria-expanded="false"
+                        aria-controls="dyslexia-features" id="disorder-dyslexia">
+                        <span class="disorder-card__label">Dyslexia</span>
+                    </button>
+                    <button type="button" class="disorder-card" data-disorder="autism" aria-expanded="false"
+                        aria-controls="autism-features" id="disorder-autism">
+                        <span class="disorder-card__label">Autism</span>
+                    </button>
+                    <button type="button" class="disorder-card" data-disorder="fatigue" aria-expanded="false"
+                        aria-controls="fatigue-features" id="disorder-fatigue">
+                        <span class="disorder-card__label">Fatigue</span>
+                    </button>
+                </div>
+                <div class="disorder-features" aria-live="polite">
+                    <div id="adhd-features" class="disorder-features__panel" hidden>
+                        <h3 class="disorder-features__title">ADHD Features</h3>
+                        <p class="disorder-features__intro">Tools to maintain focus and reduce distractions:</p>
+                        <div class="disorder-features__grid">
+                            <article class="disorder-feature">
+                                <span class="disorder-feature__icon" aria-hidden="true">◎</span>
+                                <h4 class="disorder-feature__title">Focus Mode</h4>
+                                <p class="disorder-feature__desc">Isolate content with a spotlight effect to block out
+                                    peripheral noise.</p>
+                            </article>
+                            <article class="disorder-feature">
+                                <span class="disorder-feature__icon" aria-hidden="true"><b>B</b></span>
+                                <h4 class="disorder-feature__title">Bionic Reading</h4>
+                                <p class="disorder-feature__desc">Highlighted word starts provide artificial fixation
+                                    points for faster processing.</p>
+                            </article>
+                            <article class="disorder-feature">
+                                <span class="disorder-feature__icon" aria-hidden="true">◻</span>
+                                <h4 class="disorder-feature__title">Simplify Mode</h4>
+                                <p class="disorder-feature__desc">Instantly strip away ads, sidebars, and cluttered
+                                    layouts for a clean view.</p>
+                            </article>
+                            <article class="disorder-feature">
+                                <span class="disorder-feature__icon" aria-hidden="true">◈</span>
+                                <h4 class="disorder-feature__title">AI Summary</h4>
+                                <p class="disorder-feature__desc">Gemini-powered summaries give you the gist without the
+                                    overwhelm.</p>
+                            </article>
+                        </div>
+                    </div>
+                    <div id="dyslexia-features" class="disorder-features__panel" hidden>
+                        <h3 class="disorder-features__title">Dyslexia Features</h3>
+                        <p class="disorder-features__intro">Assistive tools for easier decoding and tracking:</p>
+                        <div class="disorder-features__grid">
+                            <article class="disorder-feature">
+                                <span class="disorder-feature__icon" aria-hidden="true">◐</span>
+                                <h4 class="disorder-feature__title">Dyslexia Font</h4>
+                                <p class="disorder-feature__desc">Swap complex site fonts with OpenDyslexic for better
+                                    letter recognition.</p>
+                            </article>
+                            <article class="disorder-feature">
+                                <span class="disorder-feature__icon" aria-hidden="true"><b>B</b></span>
+                                <h4 class="disorder-feature__title">Bionic Reading</h4>
+                                <p class="disorder-feature__desc">Guided fixation points help maintain your place and
+                                    flow while reading.</p>
+                            </article>
+                            <article class="disorder-feature">
+                                <span class="disorder-feature__icon" aria-hidden="true">≡</span>
+                                <h4 class="disorder-feature__title">Bold Text</h4>
+                                <p class="disorder-feature__desc">Universal bolding for all text to increase visual
+                                    weight and readability.</p>
+                            </article>
+                            <article class="disorder-feature">
+                                <span class="disorder-feature__icon" aria-hidden="true">◉</span>
+                                <h4 class="disorder-feature__title">Contrast Modes</h4>
+                                <p class="disorder-feature__desc">Choose from high-contrast or soft sepia themes to
+                                    reduce visual stress.</p>
+                            </article>
+                        </div>
+                    </div>
+                    <div id="fatigue-features" class="disorder-features__panel" hidden>
+                        <h3 class="disorder-features__title">Fatigue Features</h3>
+                        <p class="disorder-features__intro">Tools to prevent burnout and manage energy:</p>
+                        <div class="disorder-features__grid">
+                            <article class="disorder-feature">
+                                <span class="disorder-feature__icon" aria-hidden="true">☕</span>
+                                <h4 class="disorder-feature__title">Fatigue Filter</h4>
+                                <p class="disorder-feature__desc">A visual overlay that reminds you to take breaks and
+                                    rest your eyes.</p>
+                            </article>
+                            <article class="disorder-feature">
+                                <span class="disorder-feature__icon" aria-hidden="true">⇨</span>
+                                <h4 class="disorder-feature__title">Step-by-Step</h4>
+                                <p class="disorder-feature__desc">Navigate content one paragraph at a time to reduce
+                                    cognitive load.</p>
+                            </article>
+                            <article class="disorder-feature">
+                                <span class="disorder-feature__icon" aria-hidden="true">◎</span>
+                                <h4 class="disorder-feature__title">Reduce Animations</h4>
+                                <p class="disorder-feature__desc">Instantly stop moving elements that cause sensory
+                                    strain and fatigue.</p>
+                            </article>
+                            <article class="disorder-feature">
+                                <span class="disorder-feature__icon" aria-hidden="true">◻</span>
+                                <h4 class="disorder-feature__title">Simplify Mode</h4>
+                                <p class="disorder-feature__desc">Declarative layouts that prioritize text over heavy
+                                    visuals.</p>
+                            </article>
+                        </div>
+                    </div>
+                    <div id="autism-features" class="disorder-features__panel" hidden>
+                        <h3 class="disorder-features__title">Autism Features</h3>
+                        <p class="disorder-features__intro">Features for predictability and sensory comfort:</p>
+                        <div class="disorder-features__grid">
+                            <article class="disorder-feature">
+                                <span class="disorder-feature__icon" aria-hidden="true">□</span>
+                                <h4 class="disorder-feature__title">Predictable Layouts</h4>
+                                <p class="disorder-feature__desc">Consistent page structure so you always know where to
+                                    find content.</p>
+                            </article>
+                            <article class="disorder-feature">
+                                <span class="disorder-feature__icon" aria-hidden="true">◉</span>
+                                <h4 class="disorder-feature__title">Sensory-Friendly Themes</h4>
+                                <p class="disorder-feature__desc">Calming color schemes that reduce visual stress.</p>
+                            </article>
+                            <article class="disorder-feature">
+                                <span class="disorder-feature__icon" aria-hidden="true">◇</span>
+                                <h4 class="disorder-feature__title">Reduce Clutter</h4>
+                                <p class="disorder-feature__desc">Strip away distractions for a minimal, focused view.
+                                </p>
+                            </article>
+                            <article class="disorder-feature">
+                                <span class="disorder-feature__icon" aria-hidden="true">◷</span>
+                                <h4 class="disorder-feature__title">Custom Routines</h4>
+                                <p class="disorder-feature__desc">Save preferences and apply them automatically on your
+                                    favorite sites.</p>
+                            </article>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -123,35 +204,44 @@
                 <div class="how__steps">
                     <div class="how__step">
                         <span class="how__number" aria-hidden="true">1</span>
-                        <h3 class="how__step-title">Install ZenWeb Extension</h3>
+                        <h3 class="how__step-title">Install</h3>
                         <p>Add ZenWeb to Chrome in one click from the Chrome Web Store.</p>
                     </div>
                     <div class="how__connector" aria-hidden="true"></div>
                     <div class="how__step">
                         <span class="how__number" aria-hidden="true">2</span>
-                        <h3 class="how__step-title">Activate Simplify or Focus Mode</h3>
-                        <p>Toggle modes from the extension icon or use keyboard shortcuts.</p>
+                        <h3 class="how__step-title">Choose Your Profile</h3>
+                        <p>Select which profile you're navigating—ADHD, Dyslexia, Autism, or Fatigue.</p>
                     </div>
                     <div class="how__connector" aria-hidden="true"></div>
-                    <div class="how__step">
-                        <span class="how__number" aria-hidden="true">3</span>
-                        <h3 class="how__step-title">Browse with Reduced Cognitive Load</h3>
-                        <p>Enjoy a calmer, more accessible web experience.</p>
+                    <div class="how__steps-final">
+                        <div class="how__step">
+                            <span class="how__number" aria-hidden="true">3</span>
+                            <h3 class="how__step-title">Pick Features & Modes</h3>
+                            <p>Choose from several features and modes tailored to your needs.</p>
+                        </div>
+                        <div class="how__arrow" aria-hidden="true">→</div>
+                        <div class="how__step how__step--highlight">
+                            <span class="how__number" aria-hidden="true">4</span>
+                            <h3 class="how__step-title">Browse Calmly</h3>
+                            <p>Enjoy a calmer, more accessible web experience.</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Accessibility -->
+        <!-- Accessibility First -->
         <section class="section section--accessibility" id="accessibility" aria-labelledby="a11y-heading">
             <div class="container">
                 <div class="a11y__content">
-                    <h2 id="a11y-heading" class="section__title">Built for Everyone</h2>
-                    <p class="a11y__statement">
-                        ZenWeb is designed with neurodivergent and cognitively disabled users at the core. We believe
-                        the web should adapt to people—not the other way around. Our features follow WCAG guidelines,
-                        support screen readers, and respect reduced-motion preferences.
-                    </p>
+                    <h2 id="a11y-heading" class="section__title">Accessibility First</h2>
+                    <ul class="a11y__list">
+                        <li>Dyslexia fonts</li>
+                        <li>Keyboard navigation</li>
+                        <li>Low-contrast safe</li>
+                        <li>Minimal animations</li>
+                    </ul>
                 </div>
             </div>
         </section>
@@ -165,7 +255,7 @@
                 <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="btn btn--outline">View on
                     GitHub</a>
                 <div class="oss__tech">
-                    <p><strong>Tech:</strong> Vanilla JS · Chrome Extension APIs · Accessible UI</p>
+                    <p>Manifest V3 · AI powered (Gemini Nano)</p>
                 </div>
             </div>
         </section>
@@ -173,9 +263,8 @@
         <!-- Final CTA -->
         <section class="section section--cta" id="cta" aria-labelledby="cta-heading">
             <div class="container">
-                <h2 id="cta-heading" class="cta__title">Ready to browse calmly?</h2>
                 <a href="https://chrome.google.com/webstore" target="_blank" rel="noopener noreferrer"
-                    class="btn btn--primary btn--large">Install ZenWeb</a>
+                    class="btn btn--primary btn--large">Install ZenWeb Extension</a>
             </div>
         </section>
     </main>
@@ -184,12 +273,11 @@
     <footer class="footer">
         <div class="container footer__inner">
             <nav class="footer__nav" aria-label="Footer navigation">
-                <a href="#features">Features</a>
-                <a href="#how-it-works">How It Works</a>
-                <a href="#accessibility">Accessibility</a>
                 <a href="https://github.com" target="_blank" rel="noopener noreferrer">GitHub</a>
+                <a href="#">Docs</a>
+                <a href="#">Privacy</a>
             </nav>
-            <p class="footer__copy">&copy; ZenWeb. All rights reserved.</p>
+            <p class="footer__copy">&copy; 2026 ZenWeb</p>
         </div>
     </footer>
 
