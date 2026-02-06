@@ -157,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Connect Upgrade Button
     document.getElementById('btn-upgrade-trigger')?.addEventListener('click', () => {
-      chrome.tabs.create({ url: chrome.runtime.getURL('pricing.html') });
+      chrome.tabs.create({ url: chrome.runtime.getURL('website/pricing.html') });
     });
 
     // Dev backdoor
@@ -745,7 +745,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   btnUpgradeAccount?.addEventListener('click', () => {
-    chrome.tabs.create({ url: chrome.runtime.getURL('pricing.html') });
+    chrome.tabs.create({ url: chrome.runtime.getURL('website/pricing.html') });
   });
 
   // ========================================
@@ -783,7 +783,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
       `;
         document.getElementById('btn-upgrade-summary')?.addEventListener('click', () => {
-          chrome.tabs.create({ url: chrome.runtime.getURL('pricing.html') });
+          chrome.tabs.create({ url: chrome.runtime.getURL('website/pricing.html') });
         });
       } else if (response.error) {
         summaryContainer.innerHTML = `<p class="summary-placeholder">❌ ${response.error}</p>`;
@@ -923,7 +923,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // ========================================
 
   btnDashboard?.addEventListener('click', () => {
-    chrome.tabs.create({ url: chrome.runtime.getURL('dashboard.html') });
+    chrome.tabs.create({ url: chrome.runtime.getURL('website/dashboard.html') });
+  });
+
+  document.getElementById('btn-website')?.addEventListener('click', () => {
+    chrome.tabs.create({ url: chrome.runtime.getURL('website/index.html') });
   });
 
   // ========================================

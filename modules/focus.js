@@ -9,14 +9,24 @@ class FocusManager {
         this.currentScale = 100; // Percentage
         this.articleContainer = null; // Cached article container from Readability
         this.readabilityLoaded = false;
-        // Site-specific content selectors for various news websites
+        // Site-specific content selectors for various websites
         this.siteSelectors = {
+            // IRCTC - Railway booking
+            'irctc.co.in': {
+                articleContainers: ['.loginCont', '.loginBox', '.train-booking', '.book-ticket', '.search-form', 'form', '.main-content', '.ng-star-inserted'],
+                textElements: ['form', '.loginCont', '.loginForm', 'input', 'select', 'button', 'label', '.form-group', '.train-booking h2', '.book-ticket h2']
+            },
+            // Generic form-heavy sites
+            'forms': {
+                articleContainers: ['form', '.form-container', '.login-form', '.signup-form', '.search-form', '.booking-form'],
+                textElements: ['form', 'fieldset', 'label', '.form-group', '.input-group']
+            },
             // Times of India
             'timesofindia.indiatimes.com': {
                 articleContainers: ['._s30J', '.js_tbl_article', '.Normal', '.ga-headlines'],
                 textElements: ['div._s30J > div', '._s30J p', '.Normal']
             },
-            // Hindustan Times - .storyBody is on body tag, use .artContent instead
+            // Hindustan Times
             'hindustantimes.com': {
                 articleContainers: ['.artContent', '.articleDetail', '.storyDetailContent', '.detail-content'],
                 textElements: ['.artContent p', '.articleDetail p', '.artContent .content', 'p.content']
@@ -52,6 +62,7 @@ class FocusManager {
                 textElements: ['.article-content p', '.content-body p']
             }
         };
+
     }
 
     async enable() {
@@ -113,65 +124,163 @@ class FocusManager {
             this.keyDownHandler = null;
         }
 
+        // Clear spotlight elements
+        if (this.spotlightOverlay) {
+            this.spotlightOverlay.remove();
+            this.spotlightOverlay = null;
+        }
+        if (this.spotlightBox) {
+            this.spotlightBox.remove();
+            this.spotlightBox = null;
+        }
+
         // Clear any active highlights
         const highlighted = document.querySelectorAll('.focus-mode-highlight');
-        highlighted.forEach(el => el.classList.remove('focus-mode-highlight'));
+        highlighted.forEach(el => {
+            el.classList.remove('focus-mode-highlight');
+            el.style.removeProperty('position');
+            el.style.removeProperty('z-index');
+            el.style.removeProperty('background-color');
+            el.style.removeProperty('box-shadow');
+            el.style.removeProperty('border-radius');
+            el.style.removeProperty('padding');
+        });
     }
 
     handleParagraphHighlight(target) {
-        // Find the best candidate first (semantic tag or explicit image)
-        // Expanded selector to include more block-level containers common on news sites
-        let p = target.closest('p, li, h1, h2, h3, h4, h5, h6, blockquote, pre, figure, td, th, article, section, aside, header, footer, figcaption, div, span');
+        // SIMPLE: Just find the right element and add/remove a class
+        let highlighted = null;
 
-        // Check for explicit image target
-        if (target.tagName === 'IMG' || target.tagName === 'PICTURE') {
-            if (this.isValidTarget(target)) {
-                p = target;
-            }
+        // 1. For form elements, find their container
+        if (['INPUT', 'SELECT', 'TEXTAREA', 'BUTTON', 'LABEL'].includes(target.tagName)) {
+            highlighted = target.closest('form') || target.closest('div');
         }
 
-        // Fallback: Check for generic text containers - use new validation
-        if (!p && ['DIV', 'SPAN', 'ARTICLE', 'SECTION', 'MAIN'].includes(target.tagName)) {
-            if (this.isValidTextBlock(target)) {
-                p = target;
-            }
-        }
-
-        // Final validation using the new text block validation
-        if (p && !this.isValidTextBlock(p) && !['IMG', 'PICTURE', 'FIGURE'].includes(p.tagName)) {
-            // Try to find a better parent that is valid
-            let parent = p.parentElement;
-            while (parent && parent !== document.body) {
-                if (this.isValidTextBlock(parent)) {
-                    p = parent;
-                    break;
+        // 2. If hovering inside a container with inputs, use that
+        if (!highlighted) {
+            let el = target;
+            while (el && el !== document.body) {
+                if (el.querySelector('input, select, textarea')) {
+                    const rect = el.getBoundingClientRect();
+                    if (rect.height > 80 && rect.height < window.innerHeight * 0.8) {
+                        highlighted = el;
+                        break;
+                    }
                 }
-                parent = parent.parentElement;
-            }
-            // If still no valid target, reset
-            if (!this.isValidTextBlock(p) && !['IMG', 'PICTURE', 'FIGURE'].includes(p.tagName)) {
-                p = null;
+                el = el.parentElement;
             }
         }
 
-        // Remove previous highlight
+        // 3. For text content, find text blocks
+        if (!highlighted) {
+            highlighted = target.closest('p, h1, h2, h3, h4, h5, h6, li, blockquote, pre');
+            if (highlighted && highlighted.innerText.trim().length < 10) {
+                highlighted = null;
+            }
+        }
+
+        // Remove old highlight
         const current = document.querySelector('.focus-mode-highlight');
-        if (current && current !== p) {
+        if (current && current !== highlighted) {
             current.classList.remove('focus-mode-highlight');
         }
 
-        if (p) {
-            p.classList.add('focus-mode-highlight');
-            // Apply current scale
-            if (this.currentScale !== 100) {
-                p.style.fontSize = `${this.currentScale}%`;
-                p.style.lineHeight = '1.6';
-            }
+        // Add new highlight
+        if (highlighted) {
+            highlighted.classList.add('focus-mode-highlight');
         }
     }
 
+    // Find the container that holds input fields
+    findInputContainer(element) {
+        let current = element;
+        let bestContainer = null;
+
+        // Walk up the DOM to find a suitable container with inputs
+        while (current && current !== document.body) {
+            const inputs = current.querySelectorAll('input, select, textarea');
+            const buttons = current.querySelectorAll('button, [type="submit"]');
+            const hasInputs = inputs.length > 0 || buttons.length > 0;
+
+            if (hasInputs) {
+                const rect = current.getBoundingClientRect();
+
+                // Is this container a good size? (not too big, not too small)
+                if (rect.height > 50 && rect.height < window.innerHeight * 0.7 &&
+                    rect.width > 100 && current.offsetParent !== null) {
+
+
+                    // Prefer containers that are forms or have form-like classes
+                    if (current.tagName === 'FORM' ||
+                        current.classList.contains('form-group') ||
+                        current.classList.contains('loginCont') ||
+                        current.classList.contains('loginBox') ||
+                        current.classList.contains('search-form') ||
+                        current.classList.contains('booking-form')) {
+                        return current; // Perfect match
+                    }
+
+                    // Save as candidate
+                    if (!bestContainer || rect.height < bestContainer.getBoundingClientRect().height) {
+                        bestContainer = current;
+                    }
+                }
+            }
+
+            current = current.parentElement;
+        }
+
+        return bestContainer;
+    }
+
+    // Check if page has obvious form sections
+    hasFormSections() {
+        const forms = document.querySelectorAll('form, .form-group, .loginCont, .loginBox, .search-form, [class*="form"]');
+        return forms.length > 0;
+    }
+
+
+
+    // NEW: Unified validation for both text blocks and form elements
+    isValidFocusTarget(node) {
+        if (!node) return false;
+        if (node.offsetParent === null) return false; // Hidden
+
+        const rect = node.getBoundingClientRect();
+        const tagName = node.tagName;
+
+        // Too small
+        if (rect.width < 30 || rect.height < 15) return false;
+
+        // Too big = page wrapper
+        if (rect.height > window.innerHeight * 0.85) return false;
+
+        // Form elements are always valid if visible
+        if (['FORM', 'FIELDSET'].includes(tagName)) {
+            return rect.height < window.innerHeight * 0.7;
+        }
+
+        // Form groups and input containers
+        if (node.classList.contains('form-group') ||
+            node.classList.contains('input-group') ||
+            node.classList.contains('loginCont') ||
+            node.classList.contains('loginBox') ||
+            node.classList.contains('search-form')) {
+            return true;
+        }
+
+        // Has form inputs inside = valid container
+        const hasInputs = node.querySelectorAll('input, select, textarea, button').length > 0;
+        if (hasInputs && rect.height < window.innerHeight * 0.6) {
+            return true;
+        }
+
+        // Fall back to text validation
+        return this.isValidTextBlock(node);
+    }
 
     isValidTarget(node) {
+
         if (!node) return false;
         if (node.offsetParent === null) return false; // Hidden
 
@@ -324,7 +433,7 @@ class FocusManager {
                 try {
                     const nodes = document.querySelectorAll(selector);
                     nodes.forEach(node => {
-                        if (this.isValidTextBlock(node)) {
+                        if (this.isValidFocusTarget(node)) {
                             candidates.add(node);
                         }
                     });
@@ -337,10 +446,14 @@ class FocusManager {
                 try {
                     const containers = document.querySelectorAll(containerSelector);
                     containers.forEach(container => {
-                        // Get ALL text-containing elements
-                        const textBlocks = container.querySelectorAll('p, div, span, h1, h2, h3, h4, h5, h6, li, td, th');
-                        textBlocks.forEach(node => {
-                            if (this.isValidTextBlock(node)) {
+                        // Check if container itself is focusable
+                        if (this.isValidFocusTarget(container)) {
+                            candidates.add(container);
+                        }
+                        // Get ALL text and form elements
+                        const elements = container.querySelectorAll('p, div, span, h1, h2, h3, h4, h5, h6, li, td, th, form, fieldset, .form-group');
+                        elements.forEach(node => {
+                            if (this.isValidFocusTarget(node)) {
                                 candidates.add(node);
                             }
                         });
@@ -356,17 +469,18 @@ class FocusManager {
             }
         }
 
-        // Priority 3: Universal fallback - find ALL visible text blocks
-        const selector = 'p, li, h1, h2, h3, h4, h5, h6, blockquote, pre, div, article, section, span, td, th, figcaption';
+        // Priority 3: Universal fallback - find ALL visible focusable elements
+        const selector = 'p, li, h1, h2, h3, h4, h5, h6, blockquote, pre, div, article, section, span, td, th, figcaption, form, fieldset, .form-group';
         const nodes = document.querySelectorAll(selector);
 
         nodes.forEach(node => {
-            if (this.isValidTextBlock(node)) {
+            if (this.isValidFocusTarget(node)) {
                 candidates.add(node);
             }
         });
 
         return Array.from(candidates);
+
     }
 
     // New method: Universal text block validation

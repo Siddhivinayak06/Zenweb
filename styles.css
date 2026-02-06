@@ -437,14 +437,28 @@ body.context-aware-focus select,
 body.context-aware-focus button {
     position: relative;
     z-index: 2147483647 !important;
-    /* Max safe integer */
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5), 0 0 20px rgba(59, 130, 246, 0.3);
-    /* Cleaner glow */
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
     background-color: rgba(255, 255, 255, 1);
     transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s ease;
     border-radius: 6px;
     outline: none;
-    /* Remove default outline as we have custom glow */
+}
+
+/* Form elements inside highlighted container - enhanced visibility */
+.focus-mode-highlight input,
+.focus-mode-highlight textarea,
+.focus-mode-highlight select,
+.focus-mode-highlight button,
+.focus-mode-highlight label {
+    position: relative;
+    z-index: 2147483647 !important;
+    color: #1e293b !important;
+    background-color: #ffffff !important;
+}
+
+.focus-mode-highlight label {
+    color: #e2e8f0 !important;
+    background-color: transparent !important;
 }
 
 /* Specific subtle style for links to avoid disrupting reading */
@@ -453,7 +467,6 @@ body.context-aware-focus [role="button"] {
     position: relative;
     z-index: 2147483647 !important;
     text-shadow: 0 0 1px rgba(255, 255, 255, 0.5);
-    /* Subtle glow instead of background */
     color: inherit !important;
     transition: all 0.2s ease;
 }
