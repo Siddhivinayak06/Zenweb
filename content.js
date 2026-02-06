@@ -38,6 +38,7 @@ class ContextAwareController {
         this.fatigueManager = new FatigueManager();
         this.autismManager = new AutismManager();
         this.formWizard = new FormWizard();
+        this.googleFormsHelper = new GoogleFormsHelper(this.speechManager);
         this.readerManager = new ReaderManager(this.themeManager, this.speechManager, this.bionicManager, this.aiManager);
         this.focusManager = new FocusManager(this.themeManager);
 
@@ -105,6 +106,11 @@ class ContextAwareController {
 
         this.themeManager.init();
         this.readerManager.init();
+
+        // Auto-detect and initialize Google Forms helper
+        if (GoogleFormsHelper.isGoogleForm()) {
+            this.googleFormsHelper.init();
+        }
 
         // Load and apply ad blocker preference
         chrome.storage.local.get(['adBlockerEnabled'], (result) => {
@@ -324,6 +330,72 @@ class ContextAwareController {
                 const isActive = this.autismManager.toggleFreezer();
                 this.showToast(isActive ? '❄️ Page Frozen' : 'Page Unfrozen');
                 sendResponse({ enabled: isActive });
+            }
+            // ==========================================
+            // FORM HELPER MESSAGES (Sidepanel Control)
+            // ==========================================
+            else if (request.action === 'get_form_helper_status') {
+                if (this.googleFormsHelper && this.googleFormsHelper.isActive) {
+                    sendResponse({
+                        isActive: true,
+                        currentQuestion: this.googleFormsHelper.currentQuestionIndex,
+                        totalQuestions: this.googleFormsHelper.questions.length,
+                        focusModeActive: document.body.classList.contains('zenweb-gform-focus-mode')
+                    });
+                } else {
+                    sendResponse({ isActive: false });
+                }
+            }
+            else if (request.action === 'start_form_helper') {
+                if (GoogleFormsHelper.isGoogleForm()) {
+                    this.googleFormsHelper.init();
+                    sendResponse({
+                        isActive: this.googleFormsHelper.isActive,
+                        currentQuestion: this.googleFormsHelper.currentQuestionIndex,
+                        totalQuestions: this.googleFormsHelper.questions.length,
+                        focusModeActive: false
+                    });
+                } else {
+                    sendResponse({ isActive: false });
+                }
+            }
+            else if (request.action === 'form_helper_prev') {
+                if (this.googleFormsHelper && this.googleFormsHelper.isActive) {
+                    this.googleFormsHelper.prevQuestion();
+                    sendResponse({ currentQuestion: this.googleFormsHelper.currentQuestionIndex });
+                }
+            }
+            else if (request.action === 'form_helper_next') {
+                if (this.googleFormsHelper && this.googleFormsHelper.isActive) {
+                    this.googleFormsHelper.nextQuestion();
+                    sendResponse({ currentQuestion: this.googleFormsHelper.currentQuestionIndex });
+                }
+            }
+            else if (request.action === 'form_helper_read') {
+                if (this.googleFormsHelper && this.googleFormsHelper.isActive) {
+                    this.googleFormsHelper.readCurrentQuestion();
+                }
+                sendResponse({ status: 'ok' });
+            }
+            else if (request.action === 'form_helper_focus') {
+                if (this.googleFormsHelper && this.googleFormsHelper.isActive) {
+                    this.googleFormsHelper.toggleFocusMode();
+                    sendResponse({
+                        focusModeActive: document.body.classList.contains('zenweb-gform-focus-mode')
+                    });
+                }
+            }
+            else if (request.action === 'form_helper_explain') {
+                if (this.googleFormsHelper && this.googleFormsHelper.isActive) {
+                    this.googleFormsHelper.explainCurrentQuestion();
+                }
+                sendResponse({ status: 'ok' });
+            }
+            else if (request.action === 'form_helper_stop') {
+                if (this.googleFormsHelper) {
+                    this.googleFormsHelper.stop();
+                }
+                sendResponse({ status: 'stopped' });
             }
         });
     }

@@ -1091,8 +1091,147 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // ========================================
+  // FORM HELPER (Google Forms)
+  // ========================================
+
+  const formHelperAccordion = document.getElementById('form-helper-accordion');
+  const formHelperInactive = document.getElementById('form-helper-inactive');
+  const formHelperActive = document.getElementById('form-helper-active');
+  const formHelperBadge = document.getElementById('form-helper-badge');
+  const formCurrentQ = document.getElementById('form-current-q');
+  const formTotalQ = document.getElementById('form-total-q');
+  const formProgressFill = document.getElementById('form-progress-fill');
+
+  const formBtnPrev = document.getElementById('form-btn-prev');
+  const formBtnNext = document.getElementById('form-btn-next');
+  const formBtnRead = document.getElementById('form-btn-read');
+  const formBtnFocus = document.getElementById('form-btn-focus');
+  const formBtnHelp = document.getElementById('form-btn-help');
+  const formBtnStop = document.getElementById('form-btn-stop');
+
+  let formHelperState = {
+    isActive: false,
+    currentQuestion: 0,
+    totalQuestions: 0,
+    focusModeActive: false
+  };
+
+  // Check if current tab is a Google Form
+  function checkGoogleForm() {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (!tabs || tabs.length === 0) return;
+      const url = tabs[0].url || '';
+      const isGoogleForm = url.includes('docs.google.com/forms');
+
+      if (isGoogleForm) {
+        // Get form status from content script
+        sendMessage('get_form_helper_status', {}, (response) => {
+          if (response && response.isActive) {
+            showFormHelperActive(response);
+          } else {
+            // Auto-start form helper
+            sendMessage('start_form_helper', {}, (startResponse) => {
+              if (startResponse && startResponse.isActive) {
+                showFormHelperActive(startResponse);
+              }
+            });
+          }
+        });
+      } else {
+        showFormHelperInactive();
+      }
+    });
+  }
+
+  function showFormHelperActive(status) {
+    formHelperInactive?.classList.add('hidden');
+    formHelperActive?.classList.remove('hidden');
+    formHelperBadge?.classList.remove('hidden');
+
+    formHelperState.isActive = true;
+    formHelperState.currentQuestion = status.currentQuestion || 0;
+    formHelperState.totalQuestions = status.totalQuestions || 0;
+    formHelperState.focusModeActive = status.focusModeActive || false;
+
+    updateFormHelperUI();
+  }
+
+  function showFormHelperInactive() {
+    formHelperInactive?.classList.remove('hidden');
+    formHelperActive?.classList.add('hidden');
+    formHelperBadge?.classList.add('hidden');
+    formHelperState.isActive = false;
+  }
+
+  function updateFormHelperUI() {
+    if (formCurrentQ) formCurrentQ.textContent = formHelperState.currentQuestion + 1;
+    if (formTotalQ) formTotalQ.textContent = formHelperState.totalQuestions;
+    if (formProgressFill && formHelperState.totalQuestions > 0) {
+      const percentage = ((formHelperState.currentQuestion + 1) / formHelperState.totalQuestions) * 100;
+      formProgressFill.style.width = `${percentage}%`;
+    }
+    if (formBtnFocus) {
+      formBtnFocus.classList.toggle('active', formHelperState.focusModeActive);
+    }
+  }
+
+  // Form Helper Controls
+  formBtnPrev?.addEventListener('click', () => {
+    sendMessage('form_helper_prev', {}, (response) => {
+      if (response) {
+        formHelperState.currentQuestion = response.currentQuestion;
+        updateFormHelperUI();
+      }
+    });
+  });
+
+  formBtnNext?.addEventListener('click', () => {
+    sendMessage('form_helper_next', {}, (response) => {
+      if (response) {
+        formHelperState.currentQuestion = response.currentQuestion;
+        updateFormHelperUI();
+      }
+    });
+  });
+
+  formBtnRead?.addEventListener('click', () => {
+    sendMessage('form_helper_read', {});
+  });
+
+  formBtnFocus?.addEventListener('click', () => {
+    sendMessage('form_helper_focus', {}, (response) => {
+      if (response) {
+        formHelperState.focusModeActive = response.focusModeActive;
+        updateFormHelperUI();
+      }
+    });
+  });
+
+  formBtnHelp?.addEventListener('click', () => {
+    sendMessage('form_helper_explain', {});
+  });
+
+  formBtnStop?.addEventListener('click', () => {
+    sendMessage('form_helper_stop', {}, () => {
+      showFormHelperInactive();
+    });
+  });
+
+  // Check for Google Form on tab change
+  chrome.tabs.onActivated.addListener(() => {
+    setTimeout(checkGoogleForm, 500);
+  });
+
+  chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+    if (tabId === currentTabId && changeInfo.status === 'complete') {
+      setTimeout(checkGoogleForm, 500);
+    }
+  });
+
 
 
   // Initialize
   init();
+  setTimeout(checkGoogleForm, 1000);
 });

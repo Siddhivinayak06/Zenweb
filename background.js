@@ -100,6 +100,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         chrome.tabs.create({ url: chrome.runtime.getURL('pricing.html') });
         return true;
     }
+
+    // 5. Google Forms AI Helper
+    if (request.action === 'explain_form_question') {
+        handleExplainFormQuestion(request.question, request.options, request.inputType, sendResponse);
+        return true;
+    }
 });
 
 async function handleSummarizeWithApi(text, sendResponse) {
@@ -195,7 +201,7 @@ PAGE CONTENT: ${context.substring(0, 15000)}
 USER QUESTION: ${question}
 ANSWER:`;
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
@@ -220,6 +226,57 @@ ANSWER:`;
     } catch (e) {
         console.error("Chat API Failed:", e);
         sendResponse({ error: 'Request failed.' });
+    }
+}
+
+/**
+ * Handle AI explanation of form questions
+ */
+async function handleExplainFormQuestion(question, options, inputType, sendResponse) {
+    try {
+        const data = await chrome.storage.sync.get('geminiApiKey');
+        const apiKey = data.geminiApiKey || (typeof ZenWebConfig !== 'undefined' ? ZenWebConfig.GEMINI_API_KEY : null);
+
+        if (!apiKey) {
+            sendResponse({ error: { message: 'No API Key found' } });
+            return;
+        }
+
+        let prompt = `You are a helpful assistant designed for users with cognitive differences (ADHD, dyslexia, etc.). 
+Explain this form question in simple, clear language. Keep it brief (2-3 sentences max).
+
+QUESTION: ${question}`;
+
+        if (options && options.length > 0) {
+            prompt += `\n\nOPTIONS: ${options.join(', ')}`;
+        }
+
+        if (inputType) {
+            prompt += `\n\nINPUT TYPE: ${inputType}`;
+        }
+
+        prompt += `\n\nProvide a simple explanation that helps the user understand what this question is asking for.`;
+
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            sendResponse({ error: { message: errorData.error?.message || 'API Error' } });
+            return;
+        }
+
+        const result = await response.json();
+        const explanation = result.candidates[0].content.parts[0].text;
+
+        sendResponse({ explanation });
+
+    } catch (e) {
+        console.error("Form Explanation API Failed:", e);
+        sendResponse({ error: { message: 'Request failed' } });
     }
 }
 

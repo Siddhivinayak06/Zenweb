@@ -193,6 +193,40 @@
         </div>
       </details>
 
+      <!-- Form Helper (Google Forms) -->
+      <details class="section-accordion" id="form-helper-accordion">
+        <summary class="accordion-header">
+          <span class="accordion-icon">📝</span>
+          <span class="accordion-title">Form Helper</span>
+          <span id="form-helper-badge" class="badge hidden">Active</span>
+        </summary>
+        <div class="accordion-content">
+          <div id="form-helper-inactive" class="form-helper-status">
+            <p style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 16px;">
+              Open a Google Form to use Form Helper features
+            </p>
+          </div>
+          <div id="form-helper-active" class="hidden">
+            <div class="form-helper-progress" style="margin-bottom: 12px;">
+              <span style="font-size: 13px; color: var(--text-secondary);">
+                Question <strong id="form-current-q">1</strong> of <strong id="form-total-q">0</strong>
+              </span>
+              <div class="progress-bar-mini" style="margin-top: 6px;">
+                <div id="form-progress-fill" class="progress-fill-mini" style="width: 0%;"></div>
+              </div>
+            </div>
+            <div class="form-helper-controls" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+              <button id="form-btn-prev" class="form-ctrl-btn" title="Previous">⬆️</button>
+              <button id="form-btn-next" class="form-ctrl-btn" title="Next">⬇️</button>
+              <button id="form-btn-read" class="form-ctrl-btn" title="Read Aloud">🔊</button>
+              <button id="form-btn-focus" class="form-ctrl-btn" title="Focus Mode">🎯</button>
+              <button id="form-btn-help" class="form-ctrl-btn" title="AI Explain">🤖</button>
+              <button id="form-btn-stop" class="form-ctrl-btn" title="Stop Helper">✕</button>
+            </div>
+          </div>
+        </div>
+      </details>
+
       <!-- Chat -->
       <details class="section-accordion">
         <summary class="accordion-header">
