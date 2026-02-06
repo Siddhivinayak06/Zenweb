@@ -791,6 +791,146 @@ body.context-aware-focus .focus-mode-highlight {
     border-color: rgba(255, 255, 255, 0.1);
 }
 
+/* Step-by-Step Reading */
+.step-nav-overlay {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ffffff;
+    padding: 12px 24px;
+    border-radius: 40px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    z-index: 10002;
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+.step-nav-overlay.hidden {
+    display: none !important;
+}
+
+#step-counter {
+    font-weight: 600;
+    font-size: 14px;
+    color: #1e293b;
+    min-width: 60px;
+    text-align: center;
+}
+
+.step-nav-overlay button {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: transform 0.2s;
+}
+
+.step-nav-overlay button:hover {
+    transform: scale(1.05);
+}
+
+.step-hidden {
+    opacity: 0.1 !important;
+    filter: blur(4px);
+    transition: all 0.5s ease;
+    pointer-events: none;
+}
+
+.step-visible {
+    opacity: 1 !important;
+    filter: none;
+    transform: scale(1.02);
+    transition: all 0.5s ease;
+}
+
+/* Fatigue Filter */
+#zenweb-fatigue-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.9);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    opacity: 1;
+    transition: opacity 0.5s ease;
+}
+
+#zenweb-fatigue-overlay.fade-out {
+    opacity: 0;
+}
+
+.fatigue-card {
+    background: white;
+    padding: 40px;
+    border-radius: 24px;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+}
+
+.fatigue-icon {
+    font-size: 60px;
+    margin-bottom: 20px;
+}
+
+.fatigue-card h3 {
+    font-size: 24px;
+    color: #1e293b;
+    margin-bottom: 16px;
+    margin-top: 0;
+}
+
+.fatigue-card p {
+    color: #64748b;
+    line-height: 1.6;
+    margin-bottom: 24px;
+}
+
+.fatigue-countdown {
+    font-size: 48px;
+    font-weight: 700;
+    color: #3b82f6;
+    margin-bottom: 30px;
+    font-family: monospace;
+}
+
+.fatigue-skip {
+    background: #f1f5f9;
+    color: #64748b;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.fatigue-skip:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+.context-aware-theme-dark .step-nav-overlay {
+    background: #1e293b;
+    border-color: #334155;
+}
+
+.context-aware-theme-dark #step-counter {
+    color: #f1f5f9;
+}
+
 .context-aware-reader-overlay.context-aware-theme-dark .zenweb-focus-inline-controls button:hover {
     background: rgba(59, 130, 246, 0.2);
     color: #60a5fa;

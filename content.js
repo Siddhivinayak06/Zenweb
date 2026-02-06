@@ -35,6 +35,7 @@ class ContextAwareController {
         this.speechManager = new SpeechManager();
         this.aiManager = new AIManager();
         this.bionicManager = new BionicManager();
+        this.fatigueManager = new FatigueManager();
         this.formWizard = new FormWizard();
         this.readerManager = new ReaderManager(this.themeManager, this.speechManager, this.bionicManager);
         this.focusManager = new FocusManager(this.themeManager);
@@ -129,6 +130,7 @@ class ContextAwareController {
         document.addEventListener('zenweb:profile-applied', (e) => {
             this.updateFocusManagerFromProfile();
             this.updateBionicFromProfile(e.detail.settings);
+            this.updateNeuroFromProfile(e.detail.settings);
             this.analyticsManager.trackProfileUsage(e.detail.profileId);
         });
 
@@ -219,6 +221,14 @@ class ContextAwareController {
                 this.readerManager.setBionicReading(false);
                 this.showToast('Bionic Reading Disabled');
                 sendResponse({ status: 'Bionic Reading Disabled' });
+            } else if (request.action === 'toggle_step_by_step') {
+                if (request.enabled) this.readerManager.enableStepByStep();
+                else this.readerManager.disableStepByStep();
+                sendResponse({ status: 'Step Reading Toggled' });
+            } else if (request.action === 'toggle_fatigue_filter') {
+                if (request.enabled) this.fatigueManager.start();
+                else this.fatigueManager.stop();
+                sendResponse({ status: 'Fatigue Filter Toggled' });
             } else if (request.action === 'get_status') {
                 const lastScore = this.cognitiveScorer.getLastScore();
                 // Get User Status from Background? Or just send local data?
@@ -373,6 +383,19 @@ class ContextAwareController {
         } else {
             this.bionicManager.disable();
             this.readerManager.setBionicReading(false);
+        }
+    }
+
+    updateNeuroFromProfile(settings) {
+        if (settings.stepByStep) {
+            this.readerManager.enableStepByStep();
+        } else {
+            this.readerManager.disableStepByStep();
+        }
+        if (settings.fatigueFilter) {
+            this.fatigueManager.start();
+        } else {
+            this.fatigueManager.stop();
         }
     }
 

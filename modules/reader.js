@@ -6,6 +6,9 @@ class ReaderManager {
         this.bionicManager = bionicManager; // Shared manager
         this.preferredFontSize = 20;
         this.bionicEnabled = false;
+        this.stepByStepActive = false;
+        this.currentStepIndex = 0;
+        this.paragraphs = [];
     }
 
     init() {
@@ -142,6 +145,11 @@ class ReaderManager {
                 </div>
                 ${article.content}
             </div>
+            <div class="step-nav-overlay hidden" id="reader-step-nav">
+                <button id="btn-step-prev" title="Previous (Left Arrow)">← Prev</button>
+                <span id="step-counter">1 / 1</span>
+                <button id="btn-step-next" title="Next (Right Arrow)">Next →</button>
+            </div>
         `;
 
         document.body.appendChild(overlay);
@@ -167,6 +175,11 @@ class ReaderManager {
             }
         });
 
+
+        // Handle Step-by-Step if applicable
+        if (this.stepByStepActive) {
+            this.enableStepByStepUI(overlay);
+        }
 
         // Keyboard Shortcuts
         this.shortcutHandler = (e) => {
@@ -195,6 +208,12 @@ class ReaderManager {
                 case 's':
                 case 'S':
                     overlay.querySelector('#reader-speech-toggle').click();
+                    break;
+                case 'ArrowRight':
+                    if (this.stepByStepActive) this.nextStep();
+                    break;
+                case 'ArrowLeft':
+                    if (this.stepByStepActive) this.prevStep();
                     break;
             }
         };
@@ -245,6 +264,78 @@ class ReaderManager {
                 () => { speechIcon.textContent = '🔊'; speechBtn.title = "Read Aloud"; }
             );
         });
+
+        // Step-by-Step Navigation
+        overlay.querySelector('#btn-step-prev')?.addEventListener('click', () => this.prevStep());
+        overlay.querySelector('#btn-step-next')?.addEventListener('click', () => this.nextStep());
+    }
+
+    enableStepByStep() {
+        this.stepByStepActive = true;
+        if (this.isActive) {
+            const overlay = document.querySelector('.context-aware-reader-overlay');
+            if (overlay) this.enableStepByStepUI(overlay);
+        }
+    }
+
+    disableStepByStep() {
+        this.stepByStepActive = false;
+        const overlay = document.querySelector('.context-aware-reader-overlay');
+        const nav = overlay?.querySelector('#reader-step-nav');
+        if (nav) nav.classList.add('hidden');
+
+        const content = overlay?.querySelector('.context-aware-reader-content');
+        if (content) {
+            const elements = content.querySelectorAll('p, li, blockquote, h2, h3');
+            elements.forEach(el => el.classList.remove('step-hidden', 'step-visible'));
+        }
+    }
+
+    enableStepByStepUI(overlay) {
+        const nav = overlay.querySelector('#reader-step-nav');
+        if (nav) nav.classList.remove('hidden');
+
+        const content = overlay.querySelector('.context-aware-reader-content');
+        // Collect readable blocks
+        this.paragraphs = Array.from(content.querySelectorAll('p, li, blockquote, h2, h3')).filter(el => el.innerText.trim().length > 0);
+
+        if (this.paragraphs.length > 0) {
+            this.currentStepIndex = 0;
+            this.updateStepVisibility();
+        }
+    }
+
+    updateStepVisibility() {
+        this.paragraphs.forEach((p, i) => {
+            if (i === this.currentStepIndex) {
+                p.classList.add('step-visible');
+                p.classList.remove('step-hidden');
+                // Scroll to it
+                p.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                p.classList.add('step-hidden');
+                p.classList.remove('step-visible');
+            }
+        });
+
+        const counter = document.getElementById('step-counter');
+        if (counter) {
+            counter.textContent = `${this.currentStepIndex + 1} / ${this.paragraphs.length}`;
+        }
+    }
+
+    nextStep() {
+        if (this.currentStepIndex < this.paragraphs.length - 1) {
+            this.currentStepIndex++;
+            this.updateStepVisibility();
+        }
+    }
+
+    prevStep() {
+        if (this.currentStepIndex > 0) {
+            this.currentStepIndex--;
+            this.updateStepVisibility();
+        }
     }
 
     postProcessContent(container) {

@@ -51,6 +51,7 @@
         "modules/form-wizard.js",
         "modules/reader.js",
         "modules/focus.js",
+        "modules/fatigue.js",
         "content.js"
       ],
       "css": [

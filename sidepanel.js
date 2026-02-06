@@ -35,60 +35,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const adsHiddenBadge = document.getElementById('ads-hidden-badge');
   const themeChips = document.querySelectorAll('.theme-chip');
 
-  // Score Elements
-  const scoreStrip = document.getElementById('score-strip');
-  const scoreEmoji = document.getElementById('score-emoji');
-  const scoreValue = document.getElementById('score-value');
-  const scoreLabel = document.getElementById('score-label');
-  const btnRefreshScore = document.getElementById('btn-refresh-score');
 
   // ...
-
-  function updateScoreUI(data) {
-    if (!data || data.restricted) {
-      if (scoreEmoji) scoreEmoji.textContent = '🚫';
-      if (scoreValue) scoreValue.textContent = 'N/A';
-      if (scoreLabel) scoreLabel.textContent = 'Not available';
-      if (scoreStrip) scoreStrip.className = 'score-strip';
-      return;
-    }
-
-    if (!data.score && data.score !== 0) {
-      if (scoreEmoji) scoreEmoji.textContent = '⏳';
-      if (scoreValue) scoreValue.textContent = '--';
-      if (scoreLabel) scoreLabel.textContent = 'Calculating...';
-      if (scoreStrip) scoreStrip.className = 'score-strip';
-      return;
-    }
-
-    const { score, level } = data;
-
-    // Set Emoji & Text
-    if (scoreEmoji) scoreEmoji.textContent = level?.emoji || '📊';
-    if (scoreValue) scoreValue.textContent = score;
-    if (scoreLabel) scoreLabel.textContent = level?.label || 'Page Score';
-
-    // Set Strip Class for Color
-    // CSS expects: .score-strip.low, .medium, .high
-    // Assuming low score = "low" load (Green)?? Or "Low" performance (Red)?
-    // User CSS: .low { green }, .medium { amber }, .high { red }
-    // If "Page Load Score" (Speed): 100 is green. 0 is red.
-    // If "Cognitive Load Score": 0 is green (low load). 100 is red (high load).
-    // Let's assume Cognitive Load (Low is Good).
-
-    let stripClass = 'high'; // Default red
-    if (score < 50) stripClass = 'low'; // Green
-    else if (score < 80) stripClass = 'medium'; // Amber
-
-    if (scoreStrip) scoreStrip.className = `score-strip ${stripClass}`;
-  }
-
-  btnRefreshScore?.addEventListener('click', () => {
-    if (scoreEmoji) scoreEmoji.textContent = '⏳';
-    if (scoreValue) scoreValue.textContent = '...';
-    sendMessage('recalculate_cognitive_score', {}, updateScoreUI);
-  });
-
 
   // Chat Elements
   const chatMessages = document.getElementById('chat-messages');
@@ -257,13 +205,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (isRestricted) {
         connectionStatus.classList.remove('connected');
-        updateScoreUI({ restricted: true });
         return;
       }
 
       connectionStatus.classList.add('connected');
       refreshStatus();
-      loadCognitiveScore();
     }
   }
 
@@ -361,64 +307,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ========================================
-  // COGNITIVE SCORE
-  // ========================================
-
-  function loadCognitiveScore() {
-    sendMessage('get_cognitive_score', {}, updateScoreUI);
-  }
-
-  function updateScoreUI(data) {
-    const scoreRing = document.getElementById('score-ring');
-    const scoreValText = document.getElementById('score-value');
-    const scoreLabelText = document.getElementById('score-label');
-
-    if (!data || data.restricted) {
-      if (scoreRing) scoreRing.style.background = 'conic-gradient(#cbd5e1 100%, transparent 100%)';
-      if (scoreValText) scoreValText.textContent = '--';
-      if (scoreLabelText) scoreLabelText.textContent = 'Not available';
-      return;
-    }
-
-    if (!data.score && data.score !== 0) {
-      if (scoreRing) scoreRing.style.background = 'conic-gradient(#fbbf24 100%, transparent 100%)';
-      if (scoreValText) scoreValText.textContent = '--';
-      if (scoreLabelText) scoreLabelText.textContent = 'Calculating...';
-      /* Add spin class? Maybe later */
-      return;
-    }
-
-    const { score, level } = data;
-
-    // Determine Color
-    let color = '#ef4444'; // Red
-    if (score > 80) color = '#10b981'; // Green
-    else if (score > 50) color = '#f59e0b'; // Orange
-
-    // Update Ring Gradient
-    // "score" is 0-100. We want the filled part to be "score%".
-    // conic-gradient(color score%, transparent 0)
-    if (scoreRing) {
-      scoreRing.style.background = `conic-gradient(${color} ${score}%, #e2e8f0 0)`;
-    }
-
-    if (scoreValText) {
-      scoreValText.textContent = score;
-      scoreValText.style.color = 'var(--text-main)'; // Keep text clean dark, or match color? Let's match color for impact.
-      scoreValText.style.color = color;
-    }
-
-    if (scoreLabelText) scoreLabelText.textContent = level?.label || 'Load Score';
-  }
-
-  btnRefreshScore?.addEventListener('click', () => {
-    // Show spinner state
-    const scoreRing = document.getElementById('score-ring');
-    if (scoreRing) scoreRing.style.background = 'conic-gradient(#e2e8f0 100%, transparent 0)';
-    sendMessage('recalculate_cognitive_score', {}, updateScoreUI);
-  });
-
-  // ========================================
   // QUICK ACTIONS
   // ========================================
 
@@ -470,7 +358,9 @@ document.addEventListener('DOMContentLoaded', () => {
     pause: { id: 'btn-pause', icon: '⏸️', label: 'Pause Animations', action: 'toggle_pause' },
     speech: { id: 'btn-speech', icon: '🗣️', label: 'Read Aloud', action: 'read_aloud' },
     bionic: { id: 'btn-bionic', icon: '🧬', label: 'Bionic Reading', type: 'toggle', action: 'toggle_bionic' },
-    zoom: { id: 'btn-zoom', icon: '🔍', label: 'Text Size', type: 'range', action: 'set_zoom' }
+    zoom: { id: 'btn-zoom', icon: '🔍', label: 'Text Size', type: 'range', action: 'set_zoom' },
+    step: { id: 'btn-step', icon: '👣', label: 'Step Reading', type: 'toggle', action: 'toggle_step_by_step' },
+    fatigue: { id: 'btn-fatigue', icon: '🛡️', label: 'Fatigue Filter', type: 'toggle', action: 'toggle_fatigue_filter' }
   };
 
   // Profile Configurations
@@ -520,6 +410,17 @@ document.addEventListener('DOMContentLoaded', () => {
         { label: 'Dyslexia Friendly 📖', detail: 'Optimizes fonts for easier character recognition.' }
       ],
       tools: ['zoom', 'speech', 'dyslexia']
+    },
+    neuro: {
+      name: 'Neuro Mode',
+      description: 'Advanced cognition & focus suite.',
+      features: [
+        { label: 'Step-by-Step Navigation 👣', detail: 'Focus on one paragraph at a time. No overwhelming walls of text.' },
+        { label: 'Fatigue Filter 🛡️', detail: 'Monitors usage and suggests optimal breaks to prevent mental burnout.' },
+        { label: 'Bionic Formatting 🧬', detail: 'Bolds word starts to speed up cognitive processing.' },
+        { label: 'Aggressive Simplifier ✨', detail: 'Strips everything but the primary article content.' }
+      ],
+      tools: ['step', 'fatigue', 'simplify', 'bionic']
     }
   };
 
@@ -651,6 +552,12 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (tool.action === 'toggle_bionic') {
           const isActive = btn.classList.toggle('active');
           sendMessage(isActive ? 'enable_bionic' : 'disable_bionic');
+        } else if (tool.action === 'toggle_step_by_step') {
+          const isActive = btn.classList.toggle('active');
+          sendMessage(tool.action, { enabled: isActive });
+        } else if (tool.action === 'toggle_fatigue_filter') {
+          const isActive = btn.classList.toggle('active');
+          sendMessage(tool.action, { enabled: isActive });
         } else {
           sendMessage(tool.action, {}, () => refreshStatus());
         }
@@ -1054,7 +961,6 @@ document.addEventListener('DOMContentLoaded', () => {
   chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
     if (tabId === currentTabId && changeInfo.status === 'complete') {
       refreshStatus();
-      loadCognitiveScore();
     }
   });
 
