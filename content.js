@@ -119,11 +119,7 @@ class ContextAwareController {
             this.updateFocusManagerFromProfile();
         }
 
-        chrome.storage.local.get(['dyslexiaFont'], (result) => {
-            if (result.dyslexiaFont) {
-                document.body.classList.add('context-aware-dyslexia-font');
-            }
-        });
+        this.syncPersonalPreferences();
 
         setTimeout(() => this.calculateAndStoreCognitiveScore(), 2000);
 
@@ -205,11 +201,17 @@ class ContextAwareController {
                     });
                 });
                 return true; // Async
+            } else if (request.action === 'enable_bold') {
+                document.body.classList.add('zenweb-bold-text');
+                sendResponse({ status: 'Bold Mode Enabled' });
+            } else if (request.action === 'disable_bold') {
+                document.body.classList.remove('zenweb-bold-text');
+                sendResponse({ status: 'Bold Mode Disabled' });
             } else if (request.action === 'enable_dyslexia') {
-                document.body.classList.add('context-aware-dyslexia-font');
+                document.body.classList.add('zenweb-dyslexia-font');
                 sendResponse({ status: 'Dyslexia Mode Enabled' });
             } else if (request.action === 'disable_dyslexia') {
-                document.body.classList.remove('context-aware-dyslexia-font');
+                document.body.classList.remove('zenweb-dyslexia-font');
                 sendResponse({ status: 'Dyslexia Mode Disabled' });
             } else if (request.action === 'enable_bionic') {
                 this.bionicManager.enable();
@@ -347,6 +349,7 @@ class ContextAwareController {
             if (profile.settings.autoFocus && this.mode !== 'focus') {
                 this.enableFocus();
             }
+            this.syncPersonalPreferences();
         }
     }
 
@@ -354,7 +357,24 @@ class ContextAwareController {
         await this.profileManager.clearActiveProfile();
         this.profileManager.removeProfileCSS();
         document.body.removeAttribute('data-zenweb-profile');
+        this.syncPersonalPreferences();
         this.showToast('Profile Cleared');
+    }
+
+    syncPersonalPreferences() {
+        chrome.storage.local.get(['boldText', 'dyslexiaFont', 'bionicReading'], (result) => {
+            if (result.boldText) document.body.classList.add('zenweb-bold-text');
+            if (result.dyslexiaFont) document.body.classList.add('zenweb-dyslexia-font');
+
+            if (result.bionicReading) {
+                this.bionicManager.enable();
+                this.readerManager.setBionicReading(true);
+            } else if (!this.profileManager.getActiveProfile()?.settings?.useBionicReading) {
+                // Only disable if no profile is active or profile doesn't want it
+                this.bionicManager.disable();
+                this.readerManager.setBionicReading(false);
+            }
+        });
     }
 
     updateFocusManagerFromProfile() {
@@ -381,8 +401,13 @@ class ContextAwareController {
             this.bionicManager.enable();
             this.readerManager.setBionicReading(true);
         } else {
-            this.bionicManager.disable();
-            this.readerManager.setBionicReading(false);
+            // Respect personal preference if any
+            chrome.storage.local.get(['bionicReading'], (result) => {
+                if (!result.bionicReading) {
+                    this.bionicManager.disable();
+                    this.readerManager.setBionicReading(false);
+                }
+            });
         }
     }
 

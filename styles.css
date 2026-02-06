@@ -1052,12 +1052,18 @@ body.zenweb-no-animations video[autoplay] {
 body.zenweb-bold-text p,
 body.zenweb-bold-text span,
 body.zenweb-bold-text li,
-body.zenweb-bold-text div {
-    font-weight: 600 !important;
+body.zenweb-bold-text div,
+body.zenweb-bold-text h1,
+body.zenweb-bold-text h2,
+body.zenweb-bold-text h3,
+body.zenweb-bold-text h4,
+body.zenweb-bold-text h5,
+body.zenweb-bold-text h6 {
+    font-weight: 700 !important;
 }
 
 body.zenweb-bold-text a {
-    font-weight: 700 !important;
+    font-weight: 800 !important;
 }
 
 /* Large Cursor Mode */

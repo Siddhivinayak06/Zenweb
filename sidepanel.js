@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnClearProfile = document.getElementById('btn-clear-profile');
 
   // Appearance Elements
-  const checkDyslexia = document.getElementById('check-dyslexia');
+  const checkBold = document.getElementById('check-bold');
   const checkBionic = document.getElementById('check-bionic');
   const checkAdBlocker = document.getElementById('check-adblocker');
   const adsHiddenBadge = document.getElementById('ads-hidden-badge');
@@ -221,16 +221,63 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load profile
     chrome.storage.sync.get(['activeProfile'], (result) => {
       currentActiveProfile = result.activeProfile || null;
-      // updateProfileUI removed; handled by auto-load block
+      if (currentActiveProfile) {
+        profileSection.classList.add('hidden');
+        adaptiveTools.classList.remove('hidden');
+        const config = profileConfigs[currentActiveProfile];
+        if (config) {
+          activeProfileName.textContent = config.name;
+          renderTools(config.tools);
+        }
+      }
     });
 
-    // Load dyslexia font, bionic reading, and other settings
-    chrome.storage.local.get(['dyslexiaFont', 'bionicReading', 'theme', 'adBlockerEnabled'], (result) => {
-      if (checkDyslexia) checkDyslexia.checked = !!result.dyslexiaFont;
+    // Initial Sync
+    syncUIFromStorage();
+  }
+
+  function syncUIFromStorage() {
+    chrome.storage.local.get(['boldText', 'bionicReading', 'theme', 'adBlockerEnabled'], (result) => {
+      // 1. Update Appearance Checkboxes
+      if (checkBold) checkBold.checked = !!result.boldText;
       if (checkBionic) checkBionic.checked = !!result.bionicReading;
       if (checkAdBlocker) checkAdBlocker.checked = result.adBlockerEnabled !== false;
       updateThemeUI(result.theme || 'light');
+
+      // 2. Update Adaptive Tool Buttons
+      syncAdaptiveToolStates(result);
     });
+  }
+
+  function syncAdaptiveToolStates(prefs) {
+    const toolButtons = toolContainer.querySelectorAll('.quick-btn');
+    toolButtons.forEach(btn => {
+      const toolKey = btn.dataset.toolKey;
+      if (!toolKey) return;
+
+      const tool = tools[toolKey];
+      if (tool && tool.type === 'toggle') {
+        let isActive = false;
+        if (tool.action === 'toggle_bold') isActive = !!prefs.boldText;
+        if (tool.action === 'toggle_bionic') isActive = !!prefs.bionicReading;
+        // Add other persistent toggles here if needed
+
+        btn.classList.toggle('active', isActive);
+      }
+    });
+  }
+
+  function setFeatureState(feature, enabled) {
+    const storageKey = feature === 'bold' ? 'boldText' :
+      feature === 'bionic' ? 'bionicReading' : null;
+
+    if (storageKey) {
+      chrome.storage.local.set({ [storageKey]: enabled });
+      sendMessage(enabled ? `enable_${feature}` : `disable_${feature}`);
+
+      // SYNC ALL UI
+      syncUIFromStorage();
+    }
   }
 
   // ========================================
@@ -352,7 +399,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const tools = {
     focus: { id: 'btn-focus', icon: '🎯', label: 'Focus Mode', action: 'toggle_focus' },
     simplify: { id: 'btn-simplify', icon: '📖', label: 'Simplify', action: 'toggle_simplify' },
-    dyslexia: { id: 'check-dyslexia', icon: 'Aa', label: 'Dyslexia Font', type: 'toggle', action: 'toggle_dyslexia' },
+    bold: { id: 'check-bold', icon: 'B', label: 'Bold Font', type: 'toggle', action: 'toggle_bold' },
+    dyslexia: { id: 'btn-dyslexia', icon: 'Aa', label: 'Dyslexia Font', type: 'toggle', action: 'toggle_dyslexia' },
     summarize: { id: 'btn-summarize', icon: '✨', label: 'Summarize', action: 'summarize' },
     pause: { id: 'btn-pause', icon: '⏸️', label: 'Pause Animations', action: 'toggle_pause' },
     speech: { id: 'btn-speech', icon: '🗣️', label: 'Read Aloud', action: 'read_aloud' },
@@ -411,15 +459,14 @@ document.addEventListener('DOMContentLoaded', () => {
       tools: ['zoom', 'speech', 'dyslexia']
     },
     neuro: {
-      name: 'Neuro Mode',
+      name: 'Fatigue Mode',
       description: 'Advanced cognition & focus suite.',
       features: [
         { label: 'Step-by-Step Navigation 👣', detail: 'Focus on one paragraph at a time. No overwhelming walls of text.' },
-        { label: 'Fatigue Filter 🛡️', detail: 'Monitors usage and suggests optimal breaks to prevent mental burnout.' },
         { label: 'Bionic Formatting 🧬', detail: 'Bolds word starts to speed up cognitive processing.' },
         { label: 'Aggressive Simplifier ✨', detail: 'Strips everything but the primary article content.' }
       ],
-      tools: ['step', 'fatigue', 'simplify', 'bionic']
+      tools: ['step', 'simplify', 'bionic']
     }
   };
 
@@ -573,13 +620,15 @@ document.addEventListener('DOMContentLoaded', () => {
         <span class="quick-label">${tool.label}</span>
       `;
 
+      btn.dataset.toolKey = key;
       btn.addEventListener('click', () => {
-        if (tool.action === 'toggle_dyslexia') {
+        if (tool.action === 'toggle_bold') {
+          setFeatureState('bold', !btn.classList.contains('active'));
+        } else if (tool.action === 'toggle_dyslexia') {
           const isActive = btn.classList.toggle('active');
           sendMessage(isActive ? 'enable_dyslexia' : 'disable_dyslexia');
         } else if (tool.action === 'toggle_bionic') {
-          const isActive = btn.classList.toggle('active');
-          sendMessage(isActive ? 'enable_bionic' : 'disable_bionic');
+          setFeatureState('bionic', !btn.classList.contains('active'));
         } else if (tool.action === 'toggle_step_by_step') {
           const isActive = btn.classList.toggle('active');
           sendMessage(tool.action, { enabled: isActive });
@@ -711,16 +760,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // APPEARANCE
   // ========================================
 
-  checkDyslexia?.addEventListener('change', (e) => {
-    const enabled = e.target.checked;
-    chrome.storage.local.set({ dyslexiaFont: enabled });
-    sendMessage(enabled ? 'enable_dyslexia' : 'disable_dyslexia');
+  checkBold?.addEventListener('change', (e) => {
+    setFeatureState('bold', e.target.checked);
   });
 
   checkBionic?.addEventListener('change', (e) => {
-    const enabled = e.target.checked;
-    chrome.storage.local.set({ bionicReading: enabled });
-    sendMessage(enabled ? 'enable_bionic' : 'disable_bionic');
+    setFeatureState('bionic', e.target.checked);
   });
 
   checkAdBlocker?.addEventListener('change', (e) => {

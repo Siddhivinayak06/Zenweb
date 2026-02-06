@@ -68,9 +68,9 @@ class ProfileManager {
             },
             neuro: {
                 id: 'neuro',
-                name: 'Neuro Mode',
+                name: 'Fatigue Mode',
                 icon: '🧠',
-                description: 'High-focus reading suite with Step-by-Step and Fatigue Filter',
+                description: 'High-focus reading suite with Step-by-Step navigation',
                 settings: {
                     autoFocus: false,
                     timerDuration: 20,
@@ -82,8 +82,7 @@ class ProfileManager {
                     useBionicReading: true,
                     fontSize: 18,
                     lineSpacing: 1.7,
-                    stepByStep: true,
-                    fatigueFilter: true
+                    stepByStep: true
                 }
             },
 
@@ -201,12 +200,13 @@ class ProfileManager {
         const body = document.body;
         if (settings.fontSize) root.style.setProperty('--zenweb-font-size', `${settings.fontSize}px`);
         if (settings.lineSpacing) root.style.setProperty('--zenweb-line-height', settings.lineSpacing);
-        body.classList.toggle('zenweb-dyslexia-font', !!settings.useDyslexiaFont);
-        body.classList.toggle('zenweb-high-contrast', !!settings.highContrast);
-        body.classList.toggle('zenweb-muted-colors', !!settings.mutedColors);
-        body.classList.toggle('zenweb-no-animations', !!settings.hideAnimations);
-        body.classList.toggle('zenweb-bold-text', !!settings.boldText);
-        body.classList.toggle('zenweb-large-cursor', settings.cursorSize === 'large');
+
+        if (settings.useDyslexiaFont) body.classList.add('zenweb-dyslexia-font');
+        if (settings.highContrast) body.classList.add('zenweb-high-contrast');
+        if (settings.mutedColors) body.classList.add('zenweb-muted-colors');
+        if (settings.hideAnimations) body.classList.add('zenweb-no-animations');
+        if (settings.boldText) body.classList.add('zenweb-bold-text');
+        if (settings.cursorSize === 'large') body.classList.add('zenweb-large-cursor');
     }
 
     removeProfileCSS() {
@@ -214,6 +214,9 @@ class ProfileManager {
         const body = document.body;
         root.style.removeProperty('--zenweb-font-size');
         root.style.removeProperty('--zenweb-line-height');
+
+        // Only remove profile-specific classes that aren't global preferences
+        // Actually, easiest is to remove all and then re-sync from storage in the controller
         body.classList.remove('zenweb-dyslexia-font', 'zenweb-high-contrast', 'zenweb-muted-colors', 'zenweb-no-animations', 'zenweb-bold-text', 'zenweb-large-cursor');
     }
 }
