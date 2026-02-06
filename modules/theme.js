@@ -4,21 +4,26 @@ class ThemeManager {
     }
 
     init() {
-        chrome.storage.local.get(['theme', 'dyslexiaFont'], (result) => {
+        chrome.storage.local.get(['theme'], (result) => {
             if (result.theme) this.updateTheme(result.theme);
-            if (result.dyslexiaFont) this.toggleDyslexia(true);
         });
 
         chrome.runtime.onMessage.addListener((request) => {
-            if (request.action.startsWith('set_theme_')) {
-                const theme = request.action.replace('set_theme_', '');
+            if (request.action && request.action.trim().startsWith('set_theme_')) {
+                const theme = request.action.trim().replace('set_theme_', '');
+                console.log(`ZenWeb: Theme updated to ${theme}`);
                 this.updateTheme(theme);
-            } else if (request.action === 'enable_dyslexia') {
+            } else if (request.action === 'enable_font_dyslexia') {
                 this.toggleDyslexia(true);
-            } else if (request.action === 'disable_dyslexia') {
+            } else if (request.action === 'disable_font_dyslexia') {
                 this.toggleDyslexia(false);
             }
         });
+    }
+
+    toggleDyslexia(enabled) {
+        document.body.classList.toggle('zenweb-font-dyslexia', enabled);
+        if (enabled) this.injectFonts();
     }
 
     updateTheme(theme) {

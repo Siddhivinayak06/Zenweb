@@ -26,7 +26,7 @@ body.context-aware-simplify {
 }
 
 /* Focus Mode INSIDE Reader Overlay - when both modes active */
-body.context-aware-focus .context-aware-reader-overlay {
+body.context-aware-focus :is(body, .context-aware-reader-overlay) {
     background-color: rgba(10, 10, 12, 0.98);
 }
 
@@ -485,17 +485,46 @@ body.context-aware-focus textarea:focus {
 
 
 /* Dyslexia Friendly Font Support */
-body.context-aware-dyslexia-font,
-body.context-aware-dyslexia-font * {
-    font-family: 'Comic Sans MS', 'Chalkboard SE', 'Verdana', sans-serif !important;
+.zenweb-font-dyslexia,
+.zenweb-font-dyslexia * {
+    font-family: 'OpenDyslexic', 'Comic Neue', 'Comic Sans MS', sans-serif !important;
     line-height: 1.5 !important;
     letter-spacing: 0.05em !important;
 }
 
+/* Bold Font Support */
+.zenweb-font-bold,
+.zenweb-font-bold * {
+    font-weight: 700 !important;
+}
+
+/* Legacy Support (Bridging) */
+body.context-aware-dyslexia-font,
+body.context-aware-dyslexia-font * {
+    font-family: 'OpenDyslexic', 'Comic Neue', 'Comic Sans MS', sans-serif !important;
+}
+
+body.zenweb-bold-text,
+body.zenweb-bold-text * {
+    font-weight: 700 !important;
+}
+
 /* Themes Support */
-body.context-aware-theme-dark.context-aware-simplify {
+:is(body, .context-aware-reader-overlay).context-aware-theme-dark {
     background-color: #1a1a1a !important;
     color: #e0e0e0 !important;
+}
+
+:is(body, .context-aware-reader-overlay).context-aware-theme-dark .context-aware-reader-content {
+    background-color: #242424 !important;
+    color: #e0e0e0 !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+:is(body, .context-aware-reader-overlay).context-aware-theme-sepia .context-aware-reader-content {
+    background-color: #fdf5e6 !important;
+    color: #5b4636 !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 }
 
 body.context-aware-theme-sepia.context-aware-simplify {
@@ -1147,7 +1176,7 @@ body.zenweb-reduce-clutter [class*="nav"] {
 */
 
 /* --- DARK THEME --- */
-body.context-aware-theme-dark {
+:is(body, .context-aware-reader-overlay).context-aware-theme-dark {
     background-color: #121212 !important;
     color: #e8eaed !important;
 }
@@ -1192,7 +1221,7 @@ body.context-aware-theme-dark a:visited {
 }
 
 /* --- SEPIA THEME --- */
-body.context-aware-theme-sepia {
+:is(body, .context-aware-reader-overlay).context-aware-theme-sepia {
     background-color: #f8f1e3 !important;
     color: #4b3e2f !important;
 }
@@ -1298,4 +1327,21 @@ body.zenweb-bionic-reading .context-aware-reader-content {
     background: linear-gradient(135deg, rgba(160, 90, 44, 0.1), rgba(138, 109, 59, 0.1));
     color: #a05a2c;
     border-color: rgba(160, 90, 44, 0.2);
+}
+
+/* --- LIGHT THEME (RESET) --- */
+:is(body, .context-aware-reader-overlay).context-aware-theme-light {
+    background-color: #fcfcfc !important;
+    color: #1a202c !important;
+}
+
+body.context-aware-theme-light *:not([class*="context-aware"]):not([id*="zenweb"]):not(img):not(video):not(svg):not(iframe) {
+    color: initial !important;
+    border-color: initial !important;
+}
+
+body.context-aware-theme-light *:not([class*="context-aware"]):not([id*="zenweb"]):not(img):not(video):not(svg):not(iframe):not(input):not(textarea):not(select):not(button):not([role="button"]) {
+    background-color: initial !important;
+    background-image: initial !important;
+    box-shadow: initial !important;
 }

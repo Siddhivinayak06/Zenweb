@@ -60,6 +60,14 @@ body {
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     min-height: 100vh;
+    transition: background 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body.switching-theme * {
+    transition: background 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+        border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+        color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+        box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 .hidden {
@@ -302,18 +310,15 @@ body {
     align-items: center;
     justify-content: center;
     gap: 12px;
-    /* Better spacing */
     padding: 24px 16px;
-    background: #ffffff;
-    border: 1px solid rgba(226, 232, 240, 0.6);
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
     border-radius: 16px;
-    /* Smooth corners */
     cursor: pointer;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    box-shadow: var(--shadow-sm);
 }
 
 .profile-card:hover {
@@ -326,13 +331,14 @@ body {
 .mode-info-panel {
     margin-top: 12px;
     padding: 12px;
-    background: #f8fafc;
+    background: var(--glass-bg);
     border: 1px solid var(--border-color);
     border-radius: 12px;
     display: flex;
     gap: 12px;
     align-items: flex-start;
     animation: fadeIn 0.3s ease;
+    backdrop-filter: blur(8px);
 }
 
 .mode-info-panel.hidden {
@@ -341,7 +347,8 @@ body {
 
 .info-icon {
     font-size: 20px;
-    background: #e0e7ff;
+    background: var(--accent-primary);
+    color: white;
     width: 32px;
     height: 32px;
     border-radius: 50%;
@@ -356,16 +363,26 @@ body {
 
 #info-title {
     display: block;
-    font-size: 13px;
+    font-size: 15px;
+    font-weight: 600;
     color: var(--text-primary);
     margin-bottom: 4px;
 }
 
 #info-desc {
     margin: 0;
-    font-size: 12px;
+    font-size: 14px;
     color: var(--text-secondary);
     line-height: 1.4;
+}
+
+#feature-detail-box {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border-color);
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-style: italic;
 }
 
 /* Protection Toggle */
@@ -1121,7 +1138,7 @@ body {
 .action-btn-outline {
     width: 100%;
     padding: 10px;
-    background: #ffffff;
+    background: var(--card-bg);
     color: var(--text-primary);
     border: 1.5px solid var(--border-color);
     border-radius: var(--radius-md);
@@ -1147,16 +1164,14 @@ body {
    ===================================================== */
 
 body.theme-dark {
-    --bg-color: #121212;
-    --card-bg: #1e1e1e;
+    --bg-color: #0f172a;
+    --card-bg: #1e293b;
+    --glass-bg: rgba(30, 41, 59, 0.85);
     --border-color: rgba(255, 255, 255, 0.1);
-    --text-primary: #e8eaed;
-    --text-secondary: #9aa0a6;
-    --text-muted: #5f6368;
-}
-
-body.theme-dark :is(h1, h2, h3, h4, h5, h6, p, span, label, .quick-label, .accordion-title) {
-    color: var(--text-primary);
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    background: radial-gradient(circle at top right, #1e293b, #0f172a);
 }
 
 body.theme-dark .quick-btn,
@@ -1165,10 +1180,17 @@ body.theme-dark .theme-chip,
 body.theme-dark .chat-messages-compact,
 body.theme-dark .summary-compact,
 body.theme-dark .settings-panel,
-body.theme-dark .section-accordion {
-    background: #1e1e1e;
-    border-color: #333;
+body.theme-dark .section-accordion,
+body.theme-dark .profile-card {
+    background: var(--card-bg);
+    border-color: var(--border-color);
     color: var(--text-primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+body.theme-dark .quick-btn.active {
+    background: var(--primary-gradient);
+    box-shadow: var(--shadow-glow);
 }
 
 body.theme-dark .chat-bubble.ai {
@@ -1200,16 +1222,14 @@ body.theme-dark .footer-link {
    ===================================================== */
 
 body.theme-sepia {
-    --bg-color: #f8f1e3;
-    --card-bg: #fdf6e3;
+    --bg-color: #fdf6e3;
+    --card-bg: #eee8d5;
+    --glass-bg: rgba(238, 232, 213, 0.85);
     --border-color: #d3c4a9;
-    --text-primary: #4b3e2f;
-    --text-secondary: #5b4636;
-    --text-muted: #8a7b6b;
-}
-
-body.theme-sepia :is(h1, h2, h3, h4, h5, h6, p, span, label, .quick-label, .accordion-title) {
-    color: var(--text-primary);
+    --text-primary: #586e75;
+    --text-secondary: #657b83;
+    --text-muted: #93a1a1;
+    background: #fdf6e3;
 }
 
 body.theme-sepia .quick-btn,
@@ -1218,8 +1238,9 @@ body.theme-sepia .theme-chip,
 body.theme-sepia .chat-messages-compact,
 body.theme-sepia .summary-compact,
 body.theme-sepia .settings-panel,
-body.theme-sepia .section-accordion {
-    background: #fffef8;
+body.theme-sepia .section-accordion,
+body.theme-sepia .profile-card {
+    background: #fdfaf0;
     border-color: #e3d5b8;
     color: var(--text-primary);
 }

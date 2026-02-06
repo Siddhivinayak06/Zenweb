@@ -201,11 +201,11 @@ class ProfileManager {
         if (settings.fontSize) root.style.setProperty('--zenweb-font-size', `${settings.fontSize}px`);
         if (settings.lineSpacing) root.style.setProperty('--zenweb-line-height', settings.lineSpacing);
 
-        if (settings.useDyslexiaFont) body.classList.add('zenweb-dyslexia-font');
+        if (settings.useDyslexiaFont) body.classList.add('zenweb-font-dyslexia');
         if (settings.highContrast) body.classList.add('zenweb-high-contrast');
         if (settings.mutedColors) body.classList.add('zenweb-muted-colors');
         if (settings.hideAnimations) body.classList.add('zenweb-no-animations');
-        if (settings.boldText) body.classList.add('zenweb-bold-text');
+        if (settings.boldText) body.classList.add('zenweb-font-bold');
         if (settings.cursorSize === 'large') body.classList.add('zenweb-large-cursor');
     }
 
@@ -217,7 +217,7 @@ class ProfileManager {
 
         // Only remove profile-specific classes that aren't global preferences
         // Actually, easiest is to remove all and then re-sync from storage in the controller
-        body.classList.remove('zenweb-dyslexia-font', 'zenweb-high-contrast', 'zenweb-muted-colors', 'zenweb-no-animations', 'zenweb-bold-text', 'zenweb-large-cursor');
+        body.classList.remove('zenweb-font-dyslexia', 'zenweb-font-bold', 'zenweb-high-contrast', 'zenweb-muted-colors', 'zenweb-no-animations', 'zenweb-large-cursor');
     }
 }
 

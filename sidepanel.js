@@ -237,9 +237,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function syncUIFromStorage() {
-    chrome.storage.local.get(['boldText', 'bionicReading', 'theme', 'adBlockerEnabled'], (result) => {
+    chrome.storage.local.get(['fontBoldActive', 'fontDyslexiaActive', 'bionicReading', 'theme', 'adBlockerEnabled'], (result) => {
       // 1. Update Appearance Checkboxes
-      if (checkBold) checkBold.checked = !!result.boldText;
+      if (checkBold) checkBold.checked = !!result.fontBoldActive;
       if (checkBionic) checkBionic.checked = !!result.bionicReading;
       if (checkAdBlocker) checkAdBlocker.checked = result.adBlockerEnabled !== false;
       updateThemeUI(result.theme || 'light');
@@ -258,9 +258,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const tool = tools[toolKey];
       if (tool && tool.type === 'toggle') {
         let isActive = false;
-        if (tool.action === 'toggle_bold') isActive = !!prefs.boldText;
+        if (tool.action === 'toggle_bold') isActive = !!prefs.fontBoldActive;
+        if (tool.action === 'toggle_dyslexia') isActive = !!prefs.fontDyslexiaActive;
         if (tool.action === 'toggle_bionic') isActive = !!prefs.bionicReading;
-        // Add other persistent toggles here if needed
 
         btn.classList.toggle('active', isActive);
       }
@@ -268,12 +268,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function setFeatureState(feature, enabled) {
-    const storageKey = feature === 'bold' ? 'boldText' :
-      feature === 'bionic' ? 'bionicReading' : null;
+    const storageKey = feature === 'bold' ? 'fontBoldActive' :
+      feature === 'dyslexia' ? 'fontDyslexiaActive' :
+        feature === 'bionic' ? 'bionicReading' : null;
 
     if (storageKey) {
       chrome.storage.local.set({ [storageKey]: enabled });
-      sendMessage(enabled ? `enable_${feature}` : `disable_${feature}`);
+      sendMessage(enabled ? `enable_font_${feature}` : `disable_font_${feature}`);
 
       // SYNC ALL UI
       syncUIFromStorage();
@@ -625,8 +626,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tool.action === 'toggle_bold') {
           setFeatureState('bold', !btn.classList.contains('active'));
         } else if (tool.action === 'toggle_dyslexia') {
-          const isActive = btn.classList.toggle('active');
-          sendMessage(isActive ? 'enable_dyslexia' : 'disable_dyslexia');
+          setFeatureState('dyslexia', !btn.classList.contains('active'));
         } else if (tool.action === 'toggle_bionic') {
           setFeatureState('bionic', !btn.classList.contains('active'));
         } else if (tool.action === 'toggle_step_by_step') {
@@ -782,11 +782,17 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   function updateThemeUI(theme) {
+    document.body.classList.add('switching-theme');
     document.body.classList.remove('theme-light', 'theme-sepia', 'theme-dark');
     document.body.classList.add(`theme-${theme}`);
+
     themeChips.forEach(chip => {
       chip.classList.toggle('active', chip.dataset.theme === theme);
     });
+
+    setTimeout(() => {
+      document.body.classList.remove('switching-theme');
+    }, 300);
   }
 
   themeChips.forEach(chip => {
@@ -794,9 +800,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const theme = chip.dataset.theme;
       chrome.storage.local.set({ theme });
       updateThemeUI(theme);
-      chrome.storage.local.set({ theme });
-      updateThemeUI(theme);
-      sendMessage(`set_theme_${theme} `);
+      sendMessage(`set_theme_${theme}`);
     });
   });
 
@@ -1041,8 +1045,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (namespace === 'local') {
       if (changes.theme) updateThemeUI(changes.theme.newValue);
-      if (changes.dyslexiaFont && checkDyslexia) {
-        checkDyslexia.checked = !!changes.dyslexiaFont.newValue;
+      if (changes.fontBoldActive && checkBold) {
+        checkBold.checked = !!changes.fontBoldActive.newValue;
+      }
+      if (changes.bionicReading && checkBionic) {
+        checkBionic.checked = !!changes.bionicReading.newValue;
       }
     }
   });

@@ -123,7 +123,9 @@ class ReaderManager {
 
     injectReader(article) {
         const overlay = document.createElement('div');
-        overlay.className = 'context-aware-reader-overlay';
+        const currentTheme = this.themeManager ? this.themeManager.getCurrentTheme() : 'light';
+        overlay.className = `context-aware-reader-overlay context-aware-theme-${currentTheme}`;
+        overlay.id = 'zenweb-reader-overlay';
 
         overlay.innerHTML = `
             <div class="context-aware-reader-toolbar">

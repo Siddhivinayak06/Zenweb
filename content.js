@@ -362,9 +362,12 @@ class ContextAwareController {
     }
 
     syncPersonalPreferences() {
-        chrome.storage.local.get(['boldText', 'dyslexiaFont', 'bionicReading'], (result) => {
-            if (result.boldText) document.body.classList.add('zenweb-bold-text');
-            if (result.dyslexiaFont) document.body.classList.add('zenweb-dyslexia-font');
+        chrome.storage.local.get(['fontBoldActive', 'fontDyslexiaActive', 'bionicReading'], (result) => {
+            const isBold = !!result.fontBoldActive;
+            const isDyslexic = !!result.fontDyslexiaActive;
+
+            document.body.classList.toggle('zenweb-font-bold', isBold);
+            document.body.classList.toggle('zenweb-font-dyslexia', isDyslexic);
 
             if (result.bionicReading) {
                 this.bionicManager.enable();
