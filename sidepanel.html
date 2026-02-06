@@ -3,121 +3,86 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ZenWeb</title>
   <link rel="stylesheet" href="sidepanel.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap"
     rel="stylesheet">
 </head>
 
 <body>
   <div class="app-container">
-    <!-- Minimal Header -->
+
+    <!-- Compact Header -->
     <header class="compact-header">
       <div class="logo-area">
-        <span class="logo-text">Active</span>
+        <h1>ZenWeb</h1>
         <div id="connection-status" class="status-dot-mini" title="Connection Status"></div>
       </div>
       <div class="header-actions">
-        <div class="brand-logo">ZenWeb</div>
-        <button id="btn-settings" class="icon-btn-small" aria-label="Settings">⚙️</button>
+        <button id="btn-settings" class="icon-btn-small" title="Settings">⚙️</button>
       </div>
     </header>
 
-    <!-- Settings Panel (Hidden by default) -->
+    <!-- Settings Panel -->
     <div id="settings-panel" class="settings-panel hidden">
       <div class="settings-header">
         <h2>Settings</h2>
         <button id="btn-close-settings" class="close-btn">×</button>
       </div>
       <div class="settings-content">
-        <!-- User Account Section -->
-        <div id="user-account-section" class="account-card">
+        <!-- Auth Section -->
+        <div class="account-card" style="padding:0; border:none; background:transparent;">
           <div id="user-logged-out">
-            <p style="margin-bottom: 10px; font-size: 13px;">Sign in to sync settings across devices.</p>
-            <div class="auth-buttons" style="display: flex; flex-direction: column; gap: 8px;">
-              <input type="email" id="auth-email-input" placeholder="Email" style="width: 100%;">
-              <input type="password" id="auth-password-input" placeholder="Password" style="width: 100%;">
+            <p style="font-size:13px; margin-bottom:8px;">Sign in to sync your profile.</p>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <input type="email" id="auth-email-input" placeholder="Email">
+              <input type="password" id="auth-password-input" placeholder="Password">
               <button id="btn-login" class="action-btn">Sign In</button>
-              <div
-                style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; margin-top: 4px;">
-                <span id="auth-error-msg" style="color: #ef4444;"></span>
-                <a href="#" id="btn-toggle-auth-mode" style="color: var(--primary-color);">Need an account? Sign Up</a>
-              </div>
             </div>
           </div>
           <div id="user-logged-in" class="hidden">
-            <div class="user-info" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-              <img id="user-avatar" src="" alt="Avatar" style="width: 32px; height: 32px; border-radius: 50%;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+              <img id="user-avatar" src="https://ui-avatars.com/api/?name=User&background=random"
+                style="width:32px; height:32px; border-radius:50%; object-fit:cover;" alt="Profile">
               <div>
-                <div id="user-name" style="font-weight: 600; font-size: 14px;">User</div>
-                <div id="user-plan-badge" class="badge" style="font-size: 10px;">FREE</div>
+                <div id="user-name" style="font-weight:600;">User</div>
+                <div id="user-plan-badge" class="badge">FREE</div>
               </div>
             </div>
-            <button id="btn-upgrade-account" class="action-btn"
-              style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">Upgrade to Pro</button>
-            <button id="btn-logout" class="link-btn"
-              style="margin-top: 5px; font-size: 12px; color: var(--text-muted);">Sign Out</button>
+            <button id="btn-upgrade-account" class="action-btn" style="margin-bottom:8px; background:#6366f1;">Upgrade
+              to Pro</button>
+            <button id="btn-logout" class="link-btn">Sign Out</button>
           </div>
         </div>
-        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
 
-        <label for="api-key-input">Gemini API Key</label>
-        <input type="password" id="api-key-input" placeholder="Paste your API key here">
-        <label for="voice-select">Reading Voice</label>
-        <select id="voice-select" class="settings-select">
-          <option value="auto">Auto (Best Match)</option>
+        <label>Gemini API Key</label>
+        <input type="password" id="api-key-input" placeholder="Paste API Key">
+
+        <label>Voice</label>
+        <select id="voice-select">
+          <option value="auto">Auto</option>
         </select>
 
-        <!-- Pro Upsell: Visual Difference -->
-        <div class="setting-row disabled-row" title="Available in Pro Tier">
-          <span>Sync to Mobile <span class="badge"
-              style="font-size: 8px; vertical-align: middle; background: #6366f1;">PRO</span></span>
-          <label class="toggle-switch small">
-            <input type="checkbox" disabled>
-            <span class="slider"></span>
-          </label>
-        </div>
-
-        <button id="btn-save-settings" class="action-btn">Save Settings</button>
-        <div id="settings-status" class="status-msg"></div>
+        <button id="btn-save-settings" class="action-btn">Save</button>
+        <div id="settings-status"></div>
       </div>
     </div>
-
-    <!-- Action Items Panel (Pro) -->
-    <div id="action-panel" class="settings-panel hidden">
-      <div class="settings-header">
-        <h2>Action Items <span class="badge" style="background:#6366f1">PRO</span></h2>
-        <button id="btn-close-actions" class="close-btn">×</button>
-      </div>
-      <div class="settings-content" id="action-list-container" style="flex: 1; overflow-y: auto;">
-        <!-- Content injected by JS -->
-      </div>
-      <div class="pro-actions-footer"
-        style="padding-top: 10px; border-top: 1px solid var(--border-color); display: flex; gap: 8px;">
-        <button id="btn-copy-actions" class="action-btn" style="flex:1">Copy Text</button>
-        <button id="btn-export-actions" class="action-btn" style="flex:1; background: #1e293b;">Export ↗</button>
-      </div>
-    </div>
-
-
 
     <!-- Main Content -->
     <main class="main-content">
 
-      <!-- Cognitive Score (Compact Card) -->
-      <div class="context-card" id="score-strip">
-        <div class="score-left">
-          <span class="score-emoji" id="score-emoji">⏳</span>
+      <!-- Score Strip -->
+      <div class="score-strip" id="score-strip">
+        <span class="score-emoji" id="score-emoji">📊</span>
+        <div class="score-info">
           <span class="score-value" id="score-value">--</span>
+          <span class="score-label" id="score-label">Cognitive Load</span>
         </div>
-        <div class="score-right">
-          <span class="score-label" id="score-label">Page Load Score</span>
-          <button id="btn-refresh-score" class="icon-btn-text" title="Refresh">↻</button>
-        </div>
+        <button id="btn-refresh-score" class="refresh-btn-mini" title="Refresh">↻</button>
       </div>
 
       <!-- Quick Actions Grid -->
@@ -132,11 +97,11 @@
         </button>
         <button id="btn-summarize" class="quick-btn">
           <span class="quick-icon">✨</span>
-          <span class="quick-label">Summarize</span>
+          <span class="quick-label">Summ.</span>
         </button>
         <button id="btn-actions" class="quick-btn">
           <span class="quick-icon">☑️</span>
-          <span class="quick-label">Actions</span>
+          <span class="quick-label">Tasks</span>
         </button>
         <button id="btn-pause" class="quick-btn">
           <span class="quick-icon">⏸️</span>
@@ -148,122 +113,129 @@
         </button>
       </div>
 
-
       <!-- Collapsible Sections -->
       <div class="collapsible-sections">
 
-        <!-- Profiles Section -->
-        <div class="profile-section-container">
-          <div class="profile-header-row">
-            <span class="section-label">Cognitive Mode</span>
-            <button id="btn-clear-profile" class="link-btn-small">✕ Clear</button>
-          </div>
-          <div class="profile-grid" id="profile-selector">
-            <button class="profile-chip" data-profile="adhd" title="ADHD Focus">● ADHD</button>
-            <button class="profile-chip" data-profile="dyslexia" title="Dyslexia Friendly">○ Dyslexia</button>
-            <button class="profile-chip" data-profile="lowVision" title="Low Vision">○ Low Vision</button>
-            <button class="profile-chip" data-profile="sensory" title="Sensory Calm">○ Sensory</button>
-            <button class="profile-chip" data-profile="custom" title="Custom">○ Custom</button>
-          </div>
-
-          <!-- Custom editor hidden by default -->
-          <div id="custom-profile-editor" class="custom-profile-editor hidden">
-            <!-- Editor content same as before -->
-          </div>
-          <button id="btn-edit-custom-profile" class="link-btn hidden" style="margin-top: 8px;">Configure
-            Custom</button>
-        </div>
-
-        <!-- Tools List -->
-        <div class="tools-list">
-          <!-- Chat -->
-          <details class="tool-item">
-            <summary class="tool-header">
-              <span class="tool-icon">💬</span>
-              <span class="tool-title">Chat with Page</span>
-              <span class="tool-arrow">›</span>
-            </summary>
-            <div class="tool-content chat-content">
-              <div id="chat-messages" class="chat-messages-compact">
-                <div class="chat-placeholder">Ask anything about this page...</div>
-              </div>
-              <div class="chat-input-row">
-                <input type="text" id="chat-input" placeholder="Type a question..." />
-                <button id="btn-send-chat" class="send-btn-compact">➤</button>
-              </div>
+        <!-- Profiles Accordion -->
+        <details class="section-accordion" open>
+          <summary class="accordion-header">
+            <span class="accordion-icon">👤</span>
+            <span class="accordion-title">Cognitive Profiles</span>
+          </summary>
+          <div class="accordion-content">
+            <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+              <button id="btn-clear-profile" class="link-btn">Clear</button>
             </div>
-          </details>
-
-          <!-- Appearance -->
-          <details class="tool-item">
-            <summary class="tool-header">
-              <span class="tool-icon">🎨</span>
-              <span class="tool-title">Appearance</span>
-              <span class="tool-arrow">›</span>
-            </summary>
-            <div class="tool-content">
-              <div class="setting-row">
-                <span>Dyslexia Font</span>
-                <label class="toggle-switch small">
-                  <input type="checkbox" id="check-dyslexia">
-                  <span class="slider"></span>
-                </label>
-              </div>
-              <div class="setting-row">
-                <span>Bionic Reading</span>
-                <label class="toggle-switch small">
-                  <input type="checkbox" id="check-bionic">
-                  <span class="slider"></span>
-                </label>
-              </div>
-              <div class="setting-row">
-                <span>Block Ads</span>
-                <label class="toggle-switch small">
-                  <input type="checkbox" id="check-adblocker" checked>
-                  <span class="slider"></span>
-                </label>
-              </div>
-              <div class="theme-row">
-                <button class="theme-chip" data-theme="light">☀️ Light</button>
-                <button class="theme-chip" data-theme="sepia">☕ Sepia</button>
-                <button class="theme-chip" data-theme="dark">🌙 Dark</button>
-              </div>
+            <div class="profile-grid" id="profile-selector">
+              <button class="profile-chip" data-profile="adhd">🎯 ADHD</button>
+              <button class="profile-chip" data-profile="dyslexia">📖 Dyslexia</button>
+              <button class="profile-chip" data-profile="lowVision">👁️ Low Vision</button>
+              <button class="profile-chip" data-profile="sensory">🔇 Sensory</button>
+              <button class="profile-chip" data-profile="custom">⚙️ Custom</button>
             </div>
-          </details>
-
-          <!-- Summary -->
-          <details class="tool-item" id="summary-section">
-            <summary class="tool-header">
-              <span class="tool-icon">📝</span>
-              <span class="tool-title">AI Summary</span>
-              <span class="tool-arrow">›</span>
-            </summary>
-            <div class="tool-content">
-              <div id="summary-container" class="summary-compact">
-                <p class="summary-placeholder">Click "Summarize" above to analyze this page</p>
+            <!-- Custom Editor -->
+            <div id="custom-profile-editor" class="custom-profile-editor hidden">
+              <div class="custom-editor-header">
+                <h3>Custom Settings</h3>
               </div>
-              <div class="summary-actions hidden" id="summary-actions">
-                <button id="btn-copy-summary" class="action-link">📋 Copy</button>
-                <button id="btn-clear-summary" class="action-link">🗑️ Clear</button>
+              <div class="custom-control-group">
+                <label>Font Size</label>
+                <div class="range-slider-container">
+                  <input type="range" id="custom-font-size" min="10" max="32" value="16">
+                  <span class="range-value">16</span>
+                </div>
               </div>
+              <button id="btn-save-custom" class="action-btn" style="padding:8px; font-size:12px;">Apply</button>
             </div>
-          </details>
-        </div>
+          </div>
+        </details>
+
+        <!-- Appearance Accordion -->
+        <details class="section-accordion">
+          <summary class="accordion-header">
+            <span class="accordion-icon">🎨</span>
+            <span class="accordion-title">Appearance</span>
+          </summary>
+          <div class="accordion-content">
+            <div class="setting-row">
+              <span>Dyslexia Font</span>
+              <label class="toggle-switch small">
+                <input type="checkbox" id="check-dyslexia">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="setting-row">
+              <span>Block Ads <span id="ads-hidden-badge" class="badge hidden">0</span></span>
+              <label class="toggle-switch small">
+                <input type="checkbox" id="check-adblocker" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="theme-row">
+              <button class="theme-chip" data-theme="light">☀️ Light</button>
+              <button class="theme-chip" data-theme="sepia">☕ Sepia</button>
+              <button class="theme-chip" data-theme="dark">🌙 Dark</button>
+            </div>
+          </div>
+        </details>
+
+        <!-- Chat -->
+        <details class="section-accordion">
+          <summary class="accordion-header">
+            <span class="accordion-icon">💬</span>
+            <span class="accordion-title">Chat</span>
+          </summary>
+          <div class="accordion-content">
+            <div id="chat-messages" class="chat-messages-compact">
+              <div class="chat-placeholder">Ask about this page...</div>
+            </div>
+            <div class="chat-input-row" style="margin-top:8px;">
+              <input type="text" id="chat-input" placeholder="Type message...">
+              <button id="btn-send-chat" class="send-btn-compact">➤</button>
+            </div>
+          </div>
+        </details>
+
+        <!-- Summary -->
+        <details class="section-accordion" id="summary-section">
+          <summary class="accordion-header">
+            <span class="accordion-icon">📝</span>
+            <span class="accordion-title">Summary</span>
+          </summary>
+          <div class="accordion-content">
+            <div id="summary-container" class="summary-compact">
+              <p class="summary-placeholder">Click 'Summarize' above.</p>
+            </div>
+            <div class="summary-actions">
+              <button id="btn-copy-summary" class="action-link">Copy</button>
+              <button id="btn-clear-summary" class="action-link">Clear</button>
+            </div>
+          </div>
+        </details>
+
       </div>
+
+      <!-- Footer -->
+      <footer class="compact-footer">
+        <button id="btn-dashboard" class="footer-link">📊 Open Analytics Dashboard</button>
+      </footer>
+
     </main>
 
-    <!-- Footer -->
-    <footer class="compact-footer">
-      <button id="btn-dashboard" class="footer-link-clean">📊 Open Analytics Dashboard</button>
-    </footer>
-  </div>
+    <!-- PRO ACTIONS PANEL -->
+    <div id="action-panel" class="settings-panel hidden">
+      <div class="settings-header">
+        <h2>Action Items</h2>
+        <button id="btn-close-actions" class="close-btn">×</button>
+      </div>
+      <div class="settings-content" id="action-list-container" style="flex:1; overflow-y:auto;"></div>
+      <div style="padding-top:10px; display:flex; gap:8px;">
+        <button id="btn-copy-actions" class="action-btn">Copy</button>
+        <button id="btn-export-actions" class="action-btn" style="background:#1e293b;">Export</button>
+      </div>
+    </div>
 
-  <!-- Hidden elements for status tracking -->
-  <div id="live-stats" class="hidden">
-    <span id="distraction-count">0</span>
-    <span id="active-mode">None</span>
   </div>
-
   <script type="module" src="sidepanel.js"></script>
 </body>
 

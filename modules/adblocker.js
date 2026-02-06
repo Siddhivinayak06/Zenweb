@@ -205,6 +205,49 @@ class AdBlocker {
             '[class*="adunit"]',
             '[class*="adslot"]',
 
+            // Times of India specific selectors
+            '.TOI_AD',
+            '.toi-ad',
+            '.toi_ad',
+            '[class*="TOIAd"]',
+            '[class*="toi-ad"]',
+            '[id*="TOI"]',
+            '#colombia_placeholder',
+            '.colombia_video_player',
+            '[data-type="colombia"]',
+            '.rightbar',
+            '.right-bar',
+            '.right_bar',
+            '#flyin-ad',
+            '.flyin-ad',
+            '.flyin_ad',
+            '[class*="flyin"]',
+            '.sticky-right',
+            '.sticky_right',
+            '#sticky-right',
+            '.widget-ad',
+            '.widget_ad',
+            '[class*="widgetAd"]',
+            '.top-strip-ad',
+            '.top_strip_ad',
+            '[class*="strip-ad"]',
+            '.article-bottom-ad',
+            '#article-bottom-ad',
+            '.bottom-banner',
+            '#bottom-banner',
+            '[class*="rightBar"]',
+            '[id*="rightBar"]',
+            '.RHS-Ad',
+            '.rhs-ad',
+            '[class*="RHS"]',
+            '.videobox',
+            '#videobox',
+            '[class*="videoBox"]',
+            '.wdt_toi',
+            '#wdt_toi',
+            '[class*="wdt_"]',
+            '[id*="wdt_"]',
+
             // Generic large containers often used for ads
             'aside[class*="ad"]',
             'section[class*="ad"]',
@@ -227,13 +270,21 @@ class AdBlocker {
         if (this.enabled) return;
         this.enabled = true;
 
-        this.injectStyles();
-        this.hideExistingAds();
-        this.startObserver();
-        this.startPeriodicScan();
-        this.startScrollListener();
+        // Wait for document to be ready before starting
+        const startBlocking = () => {
+            this.injectStyles();
+            this.hideExistingAds();
+            this.startObserver();
+            this.startPeriodicScan();
+            this.startScrollListener();
+            console.log('ZenWeb: Ad blocker enabled');
+        };
 
-        console.log('ZenWeb: Ad blocker enabled');
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', startBlocking);
+        } else {
+            startBlocking();
+        }
     }
 
     /**
@@ -529,8 +580,49 @@ class AdBlocker {
         if (el.closest('#zenweb-sidepanel')) return; // Don't hide our own UI
 
         el.classList.add('zenweb-ad-hidden');
-        el.style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important; height: 0 !important; max-height: 0 !important; overflow: hidden !important; pointer-events: none !important; width: 0 !important; margin: 0 !important; padding: 0 !important;';
+
+        // Use setProperty with 'important' priority for each style individually
+        // This is more robust than cssText against site overrides
+        el.style.setProperty('display', 'none', 'important');
+        el.style.setProperty('visibility', 'hidden', 'important');
+        el.style.setProperty('opacity', '0', 'important');
+        el.style.setProperty('height', '0', 'important');
+        el.style.setProperty('max-height', '0', 'important');
+        el.style.setProperty('width', '0', 'important');
+        el.style.setProperty('max-width', '0', 'important');
+        el.style.setProperty('overflow', 'hidden', 'important');
+        el.style.setProperty('pointer-events', 'none', 'important');
+        el.style.setProperty('margin', '0', 'important');
+        el.style.setProperty('padding', '0', 'important');
+        el.style.setProperty('border', 'none', 'important');
+        el.style.setProperty('position', 'absolute', 'important');
+        el.style.setProperty('top', '-9999px', 'important');
+        el.style.setProperty('left', '-9999px', 'important');
+        el.style.setProperty('z-index', '-9999', 'important');
+        el.style.setProperty('clip', 'rect(0,0,0,0)', 'important');
+        el.style.setProperty('clip-path', 'inset(100%)', 'important');
+
+        // For stubborn elements, also set the attribute
+        el.setAttribute('hidden', 'true');
+        el.setAttribute('aria-hidden', 'true');
+
         this.hiddenCount++;
+
+        // For extremely stubborn ads, completely remove from DOM after a short delay
+        // Only do this for known ad containers to avoid breaking pages
+        const isDefinitelyAd =
+            (el.id && (el.id.toLowerCase().includes('google_ads') || el.id.toLowerCase().includes('ad-') || el.id.toLowerCase().includes('taboola') || el.id.toLowerCase().includes('outbrain'))) ||
+            (el.className && typeof el.className === 'string' && (el.className.toLowerCase().includes('adsbygoogle') || el.className.toLowerCase().includes('taboola') || el.className.toLowerCase().includes('outbrain')));
+
+        if (isDefinitelyAd) {
+            setTimeout(() => {
+                try {
+                    if (el && el.parentNode) {
+                        el.parentNode.removeChild(el);
+                    }
+                } catch (e) { }
+            }, 500);
+        }
 
         // Also hide parent if it becomes empty or is just a wrapper
         try {
@@ -736,8 +828,20 @@ class AdBlocker {
     startObserver() {
         if (this.observer) return;
 
+        // Wait for document.body to exist
+        if (!document.body) {
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => this.startObserver());
+            } else {
+                // Retry after a short delay
+                setTimeout(() => this.startObserver(), 100);
+            }
+            return;
+        }
+
         this.observer = new MutationObserver((mutations) => {
             mutations.forEach(mutation => {
+                // Handle added nodes
                 mutation.addedNodes.forEach(node => {
                     if (node.nodeType === Node.ELEMENT_NODE) {
                         this.checkAndHideAd(node);
@@ -755,12 +859,19 @@ class AdBlocker {
                         }
                     }
                 });
+
+                // Handle attribute changes (ads often modify classes/ids)
+                if (mutation.type === 'attributes' && mutation.target.nodeType === Node.ELEMENT_NODE) {
+                    this.checkAndHideAd(mutation.target);
+                }
             });
         });
 
         this.observer.observe(document.body, {
             childList: true,
-            subtree: true
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['class', 'id', 'src', 'data-ad', 'data-ad-slot']
         });
     }
 
@@ -780,17 +891,21 @@ class AdBlocker {
     startPeriodicScan() {
         if (this.scanInterval) return;
 
-        // Scan every 2 seconds for new ads
+        // Scan every 1.5 seconds for new ads (more aggressive)
         this.scanInterval = setInterval(() => {
             if (this.enabled) {
                 this.hideExistingAds();
             }
-        }, 2000);
+        }, 1500);
 
-        // Also do an immediate scan after short delays to catch initial load
+        // More aggressive initial scans to catch ads that load quickly
+        setTimeout(() => this.hideExistingAds(), 100);
+        setTimeout(() => this.hideExistingAds(), 300);
         setTimeout(() => this.hideExistingAds(), 500);
-        setTimeout(() => this.hideExistingAds(), 1500);
-        setTimeout(() => this.hideExistingAds(), 3000);
+        setTimeout(() => this.hideExistingAds(), 1000);
+        setTimeout(() => this.hideExistingAds(), 2000);
+        setTimeout(() => this.hideExistingAds(), 3500);
+        setTimeout(() => this.hideExistingAds(), 5000);
     }
 
     /**

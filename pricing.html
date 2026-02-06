@@ -47,6 +47,7 @@
             margin: 0 0 16px 0;
             background: linear-gradient(135deg, #1e293b 0%, #6366f1 100%);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -253,7 +254,7 @@
             <!-- Pro Plan -->
             <div class="plan-card pro">
                 <div class="plan-name">Context+</div>
-                <div class="plan-price">₹499<span class="plan-period">/mo</span></div>
+                <div class="plan-price">₹200<span class="plan-period">/mo</span></div>
                 <p style="color: var(--text-muted); margin-bottom: 20px;">For professionals & researchers who need
                     powerful cognitive tools.</p>
                 <a href="#" id="btn-upgrade-pro" class="cta-btn btn-pro">Upgrade Now</a>
@@ -325,92 +326,9 @@
         </div>
     </div>
 
-    <!-- Stripe JS -->
-    <script src="https://js.stripe.com/v3/"></script>
+    <!-- Stripe Integration -->
     <script src="config.js"></script>
-
-    <script>
-        const stripeKey = window.ZenWebConfig?.STRIPE_PUBLISHABLE_KEY;
-        const priceId = window.ZenWebConfig?.STRIPE_PRICE_ID;
-        let stripe;
-
-        if (stripeKey) {
-            stripe = Stripe(stripeKey);
-        } else {
-            console.error("ZenWeb: Stripe Key missing in config");
-        }
-
-        // 1. Handle Upgrade Click
-        document.getElementById('btn-upgrade-pro').addEventListener('click', async (e) => {
-            e.preventDefault();
-            const btn = e.target;
-            btn.textContent = "Loading Stripe...";
-            btn.disabled = true;
-
-            try {
-                // Determine Success/Cancel URLs
-                // Since this is a static file, we can just reload it with params
-                const currentUrl = window.location.href.split('?')[0];
-                const successUrl = `${currentUrl}?session_id={CHECKOUT_SESSION_ID}&success=true`;
-                const cancelUrl = `${currentUrl}?canceled=true`;
-
-                const { error } = await stripe.redirectToCheckout({
-                    lineItems: [{ price: priceId, quantity: 1 }],
-                    mode: 'subscription',
-                    successUrl: successUrl,
-                    cancelUrl: cancelUrl,
-                });
-
-                if (error) {
-                    console.error("Stripe Error:", error);
-                    alert("Payment Error: " + error.message);
-                    btn.textContent = "Upgrade Now";
-                    btn.disabled = false;
-                }
-            } catch (err) {
-                console.error("Checkout Error:", err);
-                alert("Failed to start checkout. Check console.");
-                btn.textContent = "Upgrade Now";
-                btn.disabled = false;
-            }
-        });
-
-        // 2. Handle Return from Stripe
-        const urlParams = new URLSearchParams(window.location.search);
-
-        if (urlParams.get('success') === 'true') {
-            const sessionId = urlParams.get('session_id');
-            // Simulate Fulfillment
-            document.body.innerHTML = `
-                <div class="container" style="text-align:center; padding-top:100px;">
-                    <h1 style="color:#10b981">Payment Successful! 🎉</h1>
-                    <p class="subtitle">Activating your Pro license...</p>
-                    <div class="spinner" style="font-size:40px">⏳</div>
-                </div>
-            `;
-
-            // Call Background to upgrade user
-            chrome.runtime.sendMessage({ action: 'simulate_upgrade' }, (response) => {
-                if (response.success) {
-                    setTimeout(() => {
-                        document.body.innerHTML = `
-                            <div class="container" style="text-align:center; padding-top:100px;">
-                                <h1 style="color:#10b981">You are now Pro! 🚀</h1>
-                                <p class="subtitle">Close this tab and refresh the extension.</p>
-                                <button onclick="window.close()" class="cta-btn btn-pro" style="max-width:200px; margin:20px auto;">Close Page</button>
-                            </div>
-                        `;
-                    }, 2000);
-                } else {
-                    alert("Payment succeeded but activation failed: " + (response.error || 'Unknown error'));
-                }
-            });
-        }
-
-        if (urlParams.get('canceled') === 'true') {
-            alert("Payment canceled. You have not been charged.");
-        }
-    </script>
+    <script src="pricing.js"></script>
 </body>
 
 </html>

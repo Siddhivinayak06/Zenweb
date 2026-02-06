@@ -43,6 +43,53 @@ document.addEventListener('DOMContentLoaded', () => {
   const scoreLabel = document.getElementById('score-label');
   const btnRefreshScore = document.getElementById('btn-refresh-score');
 
+  // ...
+
+  function updateScoreUI(data) {
+    if (!data || data.restricted) {
+      if (scoreEmoji) scoreEmoji.textContent = '🚫';
+      if (scoreValue) scoreValue.textContent = 'N/A';
+      if (scoreLabel) scoreLabel.textContent = 'Not available';
+      if (scoreStrip) scoreStrip.className = 'score-strip';
+      return;
+    }
+
+    if (!data.score && data.score !== 0) {
+      if (scoreEmoji) scoreEmoji.textContent = '⏳';
+      if (scoreValue) scoreValue.textContent = '--';
+      if (scoreLabel) scoreLabel.textContent = 'Calculating...';
+      if (scoreStrip) scoreStrip.className = 'score-strip';
+      return;
+    }
+
+    const { score, level } = data;
+
+    // Set Emoji & Text
+    if (scoreEmoji) scoreEmoji.textContent = level?.emoji || '📊';
+    if (scoreValue) scoreValue.textContent = score;
+    if (scoreLabel) scoreLabel.textContent = level?.label || 'Page Score';
+
+    // Set Strip Class for Color
+    // CSS expects: .score-strip.low, .medium, .high
+    // Assuming low score = "low" load (Green)?? Or "Low" performance (Red)?
+    // User CSS: .low { green }, .medium { amber }, .high { red }
+    // If "Page Load Score" (Speed): 100 is green. 0 is red.
+    // If "Cognitive Load Score": 0 is green (low load). 100 is red (high load).
+    // Let's assume Cognitive Load (Low is Good).
+
+    let stripClass = 'high'; // Default red
+    if (score < 50) stripClass = 'low'; // Green
+    else if (score < 80) stripClass = 'medium'; // Amber
+
+    if (scoreStrip) scoreStrip.className = `score-strip ${stripClass}`;
+  }
+
+  btnRefreshScore?.addEventListener('click', () => {
+    if (scoreEmoji) scoreEmoji.textContent = '⏳';
+    if (scoreValue) scoreValue.textContent = '...';
+    sendMessage('recalculate_cognitive_score', {}, updateScoreUI);
+  });
+
   // Summary Elements
   const summaryContainer = document.getElementById('summary-container');
   const summarySection = document.getElementById('summary-section');
@@ -328,32 +375,52 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function updateScoreUI(data) {
+    const scoreRing = document.getElementById('score-ring');
+    const scoreValText = document.getElementById('score-value');
+    const scoreLabelText = document.getElementById('score-label');
+
     if (!data || data.restricted) {
-      scoreEmoji.textContent = '🚫';
-      scoreValue.textContent = 'N/A';
-      scoreLabel.textContent = 'Not available';
-      scoreStrip.className = 'score-strip';
+      if (scoreRing) scoreRing.style.background = 'conic-gradient(#cbd5e1 100%, transparent 100%)';
+      if (scoreValText) scoreValText.textContent = '--';
+      if (scoreLabelText) scoreLabelText.textContent = 'Not available';
       return;
     }
 
     if (!data.score && data.score !== 0) {
-      scoreEmoji.textContent = '⏳';
-      scoreValue.textContent = '--';
-      scoreLabel.textContent = 'Calculating...';
-      scoreStrip.className = 'score-strip';
+      if (scoreRing) scoreRing.style.background = 'conic-gradient(#fbbf24 100%, transparent 100%)';
+      if (scoreValText) scoreValText.textContent = '--';
+      if (scoreLabelText) scoreLabelText.textContent = 'Calculating...';
+      /* Add spin class? Maybe later */
       return;
     }
 
     const { score, level } = data;
-    scoreEmoji.textContent = level?.emoji || '📊';
-    scoreValue.textContent = score;
-    scoreLabel.textContent = level?.label || 'Page Load Score';
-    scoreStrip.className = `score - strip ${level?.level || ''} `;
+
+    // Determine Color
+    let color = '#ef4444'; // Red
+    if (score > 80) color = '#10b981'; // Green
+    else if (score > 50) color = '#f59e0b'; // Orange
+
+    // Update Ring Gradient
+    // "score" is 0-100. We want the filled part to be "score%".
+    // conic-gradient(color score%, transparent 0)
+    if (scoreRing) {
+      scoreRing.style.background = `conic-gradient(${color} ${score}%, #e2e8f0 0)`;
+    }
+
+    if (scoreValText) {
+      scoreValText.textContent = score;
+      scoreValText.style.color = 'var(--text-main)'; // Keep text clean dark, or match color? Let's match color for impact.
+      scoreValText.style.color = color;
+    }
+
+    if (scoreLabelText) scoreLabelText.textContent = level?.label || 'Load Score';
   }
 
   btnRefreshScore?.addEventListener('click', () => {
-    scoreEmoji.textContent = '⏳';
-    scoreValue.textContent = '...';
+    // Show spinner state
+    const scoreRing = document.getElementById('score-ring');
+    if (scoreRing) scoreRing.style.background = 'conic-gradient(#e2e8f0 100%, transparent 0)';
     sendMessage('recalculate_cognitive_score', {}, updateScoreUI);
   });
 
