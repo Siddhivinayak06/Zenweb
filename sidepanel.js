@@ -469,6 +469,7 @@ document.addEventListener('DOMContentLoaded', () => {
     summarize: { id: 'btn-summarize', icon: '✨', label: 'Summarize', action: 'summarize' },
     pause: { id: 'btn-pause', icon: '⏸️', label: 'Pause Animations', action: 'toggle_pause' },
     speech: { id: 'btn-speech', icon: '🗣️', label: 'Read Aloud', action: 'read_aloud' },
+    bionic: { id: 'btn-bionic', icon: '🧬', label: 'Bionic Reading', type: 'toggle', action: 'toggle_bionic' },
     zoom: { id: 'btn-zoom', icon: '🔍', label: 'Text Size', type: 'range', action: 'set_zoom' }
   };
 
@@ -481,9 +482,10 @@ document.addEventListener('DOMContentLoaded', () => {
         { label: '15m Focus Timer ⏱️', detail: 'Uses the Pomodoro technique to break work into manageable 15-minute chunks.' },
         { label: 'Blocked Animations 🚫', detail: 'Stops distracting GIFs and CSS animations to keep your focus steady.' },
         { label: 'Simplified Layout ✨', detail: 'Removes sidebar clutter and non-essential elements.' },
-        { label: 'Auto-Summarizer 📝', detail: 'Automatically generates a concise summary of long articles.' }
+        { label: 'Auto-Summarizer 📝', detail: 'Automatically generates a concise summary of long articles.' },
+        { label: 'Bionic Reading 🧬', detail: 'Bolds the start of words to help your brain skip through text faster.' }
       ],
-      tools: ['focus', 'simplify', 'pause', 'summarize']
+      tools: ['focus', 'simplify', 'bionic', 'pause', 'summarize']
     },
     dyslexia: {
       name: 'Dyslexia Mode',
@@ -492,9 +494,10 @@ document.addEventListener('DOMContentLoaded', () => {
         { label: 'Dyslexia Font 📖', detail: 'Applies OpenDyslexic font to improve reading accuracy.' },
         { label: 'Speech-to-Text 🗣️', detail: 'Reads the page content aloud with natural voice.' },
         { label: 'Larger Text 🔍', detail: 'Increases font size and line spacing for better clarity.' },
-        { label: 'High Contrast 🌗', detail: 'Adjusts colors to maximize text visibility.' }
+        { label: 'High Contrast 🌗', detail: 'Adjusts colors to maximize text visibility.' },
+        { label: 'Bionic Reading 🧬', detail: 'Bolds word starts to help eyes follow text without losing place.' }
       ],
-      tools: ['dyslexia', 'speech', 'simplify', 'zoom']
+      tools: ['dyslexia', 'bionic', 'speech', 'simplify', 'zoom']
     },
     anxiety: {
       name: 'Calm Mode',
@@ -645,6 +648,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tool.action === 'toggle_dyslexia') {
           const isActive = btn.classList.toggle('active');
           sendMessage(isActive ? 'enable_dyslexia' : 'disable_dyslexia');
+        } else if (tool.action === 'toggle_bionic') {
+          const isActive = btn.classList.toggle('active');
+          sendMessage(isActive ? 'enable_bionic' : 'disable_bionic');
         } else {
           sendMessage(tool.action, {}, () => refreshStatus());
         }

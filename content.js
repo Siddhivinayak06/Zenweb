@@ -128,6 +128,7 @@ class ContextAwareController {
 
         document.addEventListener('zenweb:profile-applied', (e) => {
             this.updateFocusManagerFromProfile();
+            this.updateBionicFromProfile(e.detail.settings);
             this.analyticsManager.trackProfileUsage(e.detail.profileId);
         });
 
@@ -362,6 +363,16 @@ class ContextAwareController {
 
         if (settings.reduceClutter) {
             this.adBlocker.enable();
+        }
+    }
+
+    updateBionicFromProfile(settings) {
+        if (settings.useBionicReading) {
+            this.bionicManager.enable();
+            this.readerManager.setBionicReading(true);
+        } else {
+            this.bionicManager.disable();
+            this.readerManager.setBionicReading(false);
         }
     }
 

@@ -23,6 +23,7 @@ class ProfileManager {
                     hideAutoplay: true,
                     highlightCurrentParagraph: true,
                     reduceClutter: true,
+                    useBionicReading: true,
                     fontSize: 16,
                     lineSpacing: 1.6
                 }
@@ -41,6 +42,7 @@ class ProfileManager {
                     highlightCurrentParagraph: true,
                     reduceClutter: false,
                     useDyslexiaFont: true,
+                    useBionicReading: true,
                     fontSize: 18,
                     lineSpacing: 1.8,
                     letterSpacing: 0.12,
@@ -147,6 +149,7 @@ class ProfileManager {
             highlightCurrentParagraph: true,
             reduceClutter: false,
             useDyslexiaFont: false,
+            useBionicReading: false,
             highContrast: false,
             mutedColors: false,
             fontSize: 16,
