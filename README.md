@@ -1,4 +1,4 @@
-# 🧘 ZenWeb Browser Assistant
+# ZenWeb Browser Assistant
 
 **Reduce cognitive load. Stay in the zone.**
 

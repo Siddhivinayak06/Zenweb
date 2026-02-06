@@ -120,7 +120,8 @@ class FocusManager {
 
     handleParagraphHighlight(target) {
         // Find the best candidate first (semantic tag or explicit image)
-        let p = target.closest('p, li, h1, h2, h3, h4, blockquote, pre, figure');
+        // Expanded selector to include more block-level containers common on news sites
+        let p = target.closest('p, li, h1, h2, h3, h4, h5, h6, blockquote, pre, figure, td, th, article, section, aside, header, footer, figcaption, div, span');
 
         // Check for explicit image target
         if (target.tagName === 'IMG' || target.tagName === 'PICTURE') {
@@ -129,19 +130,31 @@ class FocusManager {
             }
         }
 
-        // Fallback: Check for generic text containers
+        // Fallback: Check for generic text containers - use new validation
         if (!p && ['DIV', 'SPAN', 'ARTICLE', 'SECTION', 'MAIN'].includes(target.tagName)) {
-            if (this.isValidTarget(target)) {
+            if (this.isValidTextBlock(target)) {
                 p = target;
             }
         }
 
-        // Final validation of the candidate "p"
-        if (p && !this.isValidTarget(p)) {
-            p = null;
+        // Final validation using the new text block validation
+        if (p && !this.isValidTextBlock(p) && !['IMG', 'PICTURE', 'FIGURE'].includes(p.tagName)) {
+            // Try to find a better parent that is valid
+            let parent = p.parentElement;
+            while (parent && parent !== document.body) {
+                if (this.isValidTextBlock(parent)) {
+                    p = parent;
+                    break;
+                }
+                parent = parent.parentElement;
+            }
+            // If still no valid target, reset
+            if (!this.isValidTextBlock(p) && !['IMG', 'PICTURE', 'FIGURE'].includes(p.tagName)) {
+                p = null;
+            }
         }
 
-        // Remove previous highlight if detained
+        // Remove previous highlight
         const current = document.querySelector('.focus-mode-highlight');
         if (current && current !== p) {
             current.classList.remove('focus-mode-highlight');
@@ -156,6 +169,7 @@ class FocusManager {
             }
         }
     }
+
 
     isValidTarget(node) {
         if (!node) return false;
@@ -173,8 +187,8 @@ class FocusManager {
         // Too small to be meaningful content?
         if (rect.width < 60 && rect.height < 60) return false;
 
-        // Too big? (Page wrapper)
-        if (rect.height > window.innerHeight * 0.8 || rect.width > window.innerWidth * 0.9) return false;
+        // Too big? (Page wrapper) - increased threshold for taller content blocks
+        if (rect.height > window.innerHeight * 0.9 || rect.width > window.innerWidth * 0.95) return false;
 
         // 3. List Item Specifics (Social Icons)
         if (tagName === 'LI') {
@@ -188,18 +202,22 @@ class FocusManager {
         // Does it have enough text to be worth reading?
         // Semantic tags get a pass with less text, generic divs need more.
         const textLen = node.innerText.trim().length;
-        if (['P', 'H1', 'H2', 'H3', 'H4', 'BLOCKQUOTE', 'LI'].includes(tagName)) {
+        if (['P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'BLOCKQUOTE', 'LI', 'TD', 'TH', 'FIGCAPTION'].includes(tagName)) {
             return textLen > 0;
         }
 
-        // For generic containers, ensure significant direct text
-        if (['DIV', 'SPAN', 'ARTICLE', 'SECTION', 'MAIN'].includes(tagName)) {
+        // For generic containers, ensure meaningful text (relaxed threshold)
+        if (['DIV', 'SPAN', 'ARTICLE', 'SECTION', 'MAIN', 'ASIDE', 'HEADER', 'FOOTER'].includes(tagName)) {
             let hasDirectText = false;
             for (let child of node.childNodes) {
-                if (child.nodeType === 3 && child.textContent.trim().length > 20) {
+                if (child.nodeType === 3 && child.textContent.trim().length > 10) {
                     hasDirectText = true;
                     break;
                 }
+            }
+            // Also accept if innerText is substantial and element is reasonably sized
+            if (!hasDirectText && textLen > 50 && rect.height < 300) {
+                hasDirectText = true;
             }
             return hasDirectText;
         }
@@ -254,12 +272,13 @@ class FocusManager {
         const readerOverlay = document.querySelector('.context-aware-reader-overlay');
         if (readerOverlay) {
             const candidates = new Set();
-            const selector = 'p, li, h1, h2, h3, h4, blockquote, pre';
+            const selector = 'p, li, h1, h2, h3, h4, h5, h6, blockquote, pre, td, th, figcaption';
             const nodes = readerOverlay.querySelectorAll(selector);
 
             nodes.forEach(node => {
                 const textLen = node.innerText?.trim().length || 0;
-                if (textLen > 20 && node.offsetParent !== null) {
+                // Reduced threshold from 20 to 10
+                if (textLen > 10 && node.offsetParent !== null) {
                     candidates.add(node);
                 }
             });
@@ -273,11 +292,11 @@ class FocusManager {
         // Priority 1: Use Readability-detected article container (same as Simplify Mode)
         if (this.articleContainer) {
             const candidates = new Set();
-            const selector = 'p, li, h1, h2, h3, h4, blockquote, pre';
+            const selector = 'p, li, h1, h2, h3, h4, h5, h6, blockquote, pre, td, th, figcaption, div, span';
             const nodes = this.articleContainer.querySelectorAll(selector);
 
             nodes.forEach(node => {
-                if (this.isValidTargetForSite(node)) {
+                if (this.isValidTextBlock(node)) {
                     candidates.add(node);
                 }
             });
@@ -305,7 +324,7 @@ class FocusManager {
                 try {
                     const nodes = document.querySelectorAll(selector);
                     nodes.forEach(node => {
-                        if (this.isValidTargetForSite(node)) {
+                        if (this.isValidTextBlock(node)) {
                             candidates.add(node);
                         }
                     });
@@ -318,9 +337,10 @@ class FocusManager {
                 try {
                     const containers = document.querySelectorAll(containerSelector);
                     containers.forEach(container => {
-                        const textBlocks = container.querySelectorAll('p, div, span');
+                        // Get ALL text-containing elements
+                        const textBlocks = container.querySelectorAll('p, div, span, h1, h2, h3, h4, h5, h6, li, td, th');
                         textBlocks.forEach(node => {
-                            if (this.isValidTargetForSite(node)) {
+                            if (this.isValidTextBlock(node)) {
                                 candidates.add(node);
                             }
                         });
@@ -336,17 +356,67 @@ class FocusManager {
             }
         }
 
-        // Priority 3: Standard fallback
-        const selector = 'p, li, h1, h2, h3, h4, blockquote, pre, div, article, section, span, img, figure, picture';
+        // Priority 3: Universal fallback - find ALL visible text blocks
+        const selector = 'p, li, h1, h2, h3, h4, h5, h6, blockquote, pre, div, article, section, span, td, th, figcaption';
         const nodes = document.querySelectorAll(selector);
 
         nodes.forEach(node => {
-            if (this.isValidTarget(node)) {
+            if (this.isValidTextBlock(node)) {
                 candidates.add(node);
             }
         });
 
         return Array.from(candidates);
+    }
+
+    // New method: Universal text block validation
+    isValidTextBlock(node) {
+        if (!node) return false;
+        if (node.offsetParent === null) return false; // Hidden
+
+        const rect = node.getBoundingClientRect();
+        const tagName = node.tagName;
+        const textLen = node.innerText?.trim().length || 0;
+
+        // Must have visible text
+        if (textLen < 5) return false;
+
+        // Must be visible size
+        if (rect.width < 30 || rect.height < 10) return false;
+
+        // Too big = page wrapper, not content
+        if (rect.height > window.innerHeight * 0.8) return false;
+
+        // Semantic text tags always valid if they have text
+        if (['P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LI', 'BLOCKQUOTE', 'FIGCAPTION', 'TD', 'TH', 'PRE'].includes(tagName)) {
+            return true;
+        }
+
+        // For DIV/SPAN: check if it's a leaf text node (has text but few/no child elements with text)
+        if (['DIV', 'SPAN', 'ARTICLE', 'SECTION'].includes(tagName)) {
+            // Count child elements that also have substantial text
+            const childrenWithText = Array.from(node.children).filter(child => {
+                const childText = child.innerText?.trim().length || 0;
+                return childText > 10;
+            }).length;
+
+            // If it has children with text, it's a container - skip it
+            // But if it's a leaf with direct text, it's valid
+            if (childrenWithText > 2) return false;
+
+            // Check for direct text content
+            let directTextLen = 0;
+            for (let child of node.childNodes) {
+                if (child.nodeType === 3) { // Text node
+                    directTextLen += child.textContent.trim().length;
+                }
+            }
+
+            // Has direct text OR is small enough with text content
+            return directTextLen > 5 || (textLen > 10 && rect.height < 200);
+        }
+
+        return false;
     }
 
     async findArticleContainer() {
@@ -431,33 +501,33 @@ class FocusManager {
     }
 
     isValidTargetForSite(node) {
-        // Less strict validation for site-specific elements
+        // Relaxed validation for site-specific elements
         if (!node) return false;
         if (node.offsetParent === null) return false; // Hidden
 
         const rect = node.getBoundingClientRect();
         const textLen = node.innerText?.trim().length || 0;
 
-        // Must have meaningful text
-        if (textLen < 30) return false;
+        // Must have some text (relaxed from 30 to 15 chars)
+        if (textLen < 15) return false;
 
-        // Basic size checks
-        if (rect.width < 60 || rect.height < 20) return false;
+        // Basic size checks (relaxed)
+        if (rect.width < 50 || rect.height < 15) return false;
 
-        // Too big = likely a container, not a readable block
-        if (rect.height > window.innerHeight * 0.6) return false;
+        // Too big = likely a container, not a readable block (increased threshold)
+        if (rect.height > window.innerHeight * 0.7) return false;
 
         // Check if this node has mostly text or mostly child elements
-        // If mostly children with text, it's probably a container
         const childTextNodes = Array.from(node.childNodes).filter(
             child => child.nodeType === Node.TEXT_NODE && child.textContent.trim().length > 0
         );
 
         // Has meaningful direct text or is a small enough element
-        const hasDirectText = childTextNodes.some(t => t.textContent.trim().length > 20);
-        const isSmallEnough = rect.height < 200;
+        const hasDirectText = childTextNodes.some(t => t.textContent.trim().length > 10);
+        const isSmallEnough = rect.height < 250;
 
-        return hasDirectText || (isSmallEnough && textLen > 30);
+        // Accept if has direct text, or is small with substantial inner text
+        return hasDirectText || (isSmallEnough && textLen > 15);
     }
 
     async injectTimer() {
