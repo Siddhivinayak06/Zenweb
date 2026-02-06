@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const settingsPanel = document.getElementById('settings-panel');
   const btnCloseSettings = document.getElementById('btn-close-settings');
   const btnSaveSettings = document.getElementById('btn-save-settings');
-  const apiKeyInput = document.getElementById('api-key-input');
+
   const settingsStatus = document.getElementById('settings-status');
 
   // Profile Elements
@@ -44,7 +44,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnSendChat = document.getElementById('btn-send-chat');
 
   // Dashboard & Website
-  const btnDashboard = document.getElementById('btn-dashboard');
   const btnWebsite = document.getElementById('btn-website');
 
   // State
@@ -532,6 +531,35 @@ document.addEventListener('DOMContentLoaded', () => {
     sendMessage('clear_profile');
   }
 
+  // ========================================
+  // SUMMARY PANEL LOGIC
+  // ========================================
+  const summaryPanel = document.getElementById('summary-panel');
+  const summaryContent = document.getElementById('summary-content');
+  const btnCloseSummary = document.getElementById('btn-close-summary');
+  const summaryRemaining = document.getElementById('summary-remaining');
+
+  if (btnCloseSummary) {
+    btnCloseSummary.addEventListener('click', () => {
+      summaryPanel.classList.add('hidden');
+    });
+  }
+
+  function renderSummary(points, remaining) {
+    if (!points || points.length === 0) {
+      summaryContent.innerHTML = '<p>No summary available.</p>';
+    } else {
+      summaryContent.innerHTML = points.map(p => `<div class="summary-item">${p}</div>`).join('');
+    }
+    if (summaryRemaining) {
+      summaryRemaining.textContent = `Remaining: ${remaining}`;
+    }
+    summaryPanel.classList.remove('hidden');
+  }
+
+  // Tool Definitions
+  // ... (tools variable is outside, we are just hooking into renderTools)
+
   function renderTools(toolKeys) {
     toolContainer.innerHTML = '';
     toolKeys.forEach(key => {
@@ -558,6 +586,21 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (tool.action === 'toggle_fatigue_filter') {
           const isActive = btn.classList.toggle('active');
           sendMessage(tool.action, { enabled: isActive });
+        } else if (tool.action === 'summarize') {
+          const originalText = btn.innerHTML;
+          btn.innerHTML = `<span class="quick-icon">⏳</span><span class="quick-label">Thinking...</span>`;
+
+          sendMessage('summarize', {}, (response) => {
+            btn.innerHTML = originalText;
+            if (response && response.summary) {
+              renderSummary(response.summary, response.remaining);
+            } else if (response && response.error) {
+              // Show error in a toast or alert? For now using summary panel for error text
+              summaryContent.innerHTML = `<p style="color:var(--danger-color);">${response.error}</p>`;
+              summaryPanel.classList.remove('hidden');
+            }
+            refreshStatus();
+          });
         } else {
           sendMessage(tool.action, {}, () => refreshStatus());
         }
@@ -729,16 +772,7 @@ document.addEventListener('DOMContentLoaded', () => {
     settingsPanel.classList.add('hidden');
   });
 
-  btnSaveSettings?.addEventListener('click', () => {
-    const apiKey = apiKeyInput.value.trim();
-    if (apiKey) {
-      chrome.storage.sync.set({ geminiApiKey: apiKey }, () => {
-        settingsStatus.textContent = '✓ Saved!';
-        settingsStatus.style.color = '#10b981';
-        setTimeout(() => settingsStatus.textContent = '', 2000);
-      });
-    }
-  });
+
 
   // Auth Elements
   const authSection = document.getElementById('user-account-section');
@@ -759,28 +793,41 @@ document.addEventListener('DOMContentLoaded', () => {
   let isSignupMode = false;
 
   function refreshAuthUI(callback) {
-    sendMessage('get_user_status', {}, (user) => {
-      if (user) {
-        loggedOutView.classList.add('hidden');
-        loggedInView.classList.remove('hidden');
-        userName.textContent = user.name || user.email;
-        userAvatar.src = user.avatar;
-        userPlanBadge.textContent = user.plan.toUpperCase();
-        userPlanBadge.style.background = user.plan === 'pro' ? '#6366f1' : '#64748b';
+    // 1. Check Subscription Status (Handles both Cloud & Local Plans)
+    sendMessage('get_subscription_status', {}, (subCallback) => {
+      const isPro = subCallback?.isPro === true;
 
-        if (user.plan === 'pro') {
-          btnUpgradeAccount.classList.add('hidden');
+      // 2. Get User Details
+      sendMessage('get_user_status', {}, (user) => {
+        if (user) {
+          loggedOutView.classList.add('hidden');
+          loggedInView.classList.remove('hidden');
+          userName.textContent = user.name || user.email;
+          userAvatar.src = user.avatar;
+
+          // Use the status from get_subscription_status
+          if (isPro) {
+            userPlanBadge.textContent = 'PRO';
+            userPlanBadge.className = 'badge pro-badge';
+            userPlanBadge.style.background = 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)';
+            userPlanBadge.style.color = 'white';
+            btnUpgradeAccount.classList.add('hidden');
+          } else {
+            userPlanBadge.textContent = 'FREE';
+            userPlanBadge.className = 'badge';
+            userPlanBadge.style.background = '#e2e8f0';
+            userPlanBadge.style.color = '#64748b';
+            btnUpgradeAccount.classList.remove('hidden');
+          }
         } else {
-          btnUpgradeAccount.classList.remove('hidden');
+          loggedOutView.classList.remove('hidden');
+          loggedInView.classList.add('hidden');
+          // We generally clear messages, but callback might override
+          if (authErrorMsg) authErrorMsg.textContent = '';
+          if (passwordInput) passwordInput.value = '';
         }
-      } else {
-        loggedOutView.classList.remove('hidden');
-        loggedInView.classList.add('hidden');
-        // We generally clear messages, but callback might override
-        if (authErrorMsg) authErrorMsg.textContent = '';
-        if (passwordInput) passwordInput.value = '';
-      }
-      if (callback) callback(user);
+        if (callback) callback(user);
+      });
     });
   }
 
@@ -851,9 +898,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // QUICK LINKS
   // ========================================
 
-  btnDashboard?.addEventListener('click', () => {
-    chrome.tabs.create({ url: chrome.runtime.getURL('website/dashboard.html') });
-  });
+
 
   btnWebsite?.addEventListener('click', () => {
     chrome.tabs.create({ url: chrome.runtime.getURL('website/index.html') });
@@ -879,42 +924,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadingId = addChatBubble('Thinking...', 'loading');
 
     try {
-      const apiKey = await new Promise(resolve => {
-        chrome.storage.sync.get(['geminiApiKey'], r => resolve(r.geminiApiKey));
-      });
-
-      if (!apiKey) {
-        removeChatBubble(loadingId);
-        addChatBubble('Please add your Gemini API key in settings.', 'ai');
-        return;
-      }
-
       // Get page content
       const pageContent = await new Promise(resolve => {
         sendMessage('get_page_content', {}, r => resolve(r?.content || ''));
       });
 
-      // Call Gemini API
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: `Based on this webpage content, answer the question concisely.\n\nPage Content:\n${pageContent.substring(0, 8000)}\n\nQuestion: ${question}`
-            }]
-          }]
-        })
+      // Delegate Chat to Background (Handles API Key & Limits)
+      sendMessage('chat_with_api', { question, context: pageContent }, (response) => {
+        removeChatBubble(loadingId);
+
+        if (response && response.answer) {
+          addChatBubble(response.answer, 'ai');
+        } else if (response && response.error) {
+          addChatBubble('Error: ' + response.error, 'ai');
+        } else {
+          addChatBubble('Sorry, something went wrong.', 'ai');
+        }
       });
 
-      const data = await response.json();
-      removeChatBubble(loadingId);
-
-      if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
-        addChatBubble(data.candidates[0].content.parts[0].text, 'ai');
-      } else {
-        addChatBubble('Sorry, I couldn\'t generate a response.', 'ai');
-      }
     } catch (error) {
       removeChatBubble(loadingId);
       addChatBubble('Error: ' + error.message, 'ai');
@@ -944,10 +971,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // ========================================
   // DASHBOARD
   // ========================================
-
-  btnDashboard?.addEventListener('click', () => {
-    chrome.tabs.create({ url: chrome.runtime.getURL('website/dashboard.html') });
-  });
 
   document.getElementById('btn-website')?.addEventListener('click', () => {
     chrome.tabs.create({ url: chrome.runtime.getURL('website/index.html') });

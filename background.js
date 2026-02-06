@@ -76,6 +76,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return true;
     }
 
+    // Get Subscription Status (Previously missing)
+    if (request.action === 'get_subscription_status') {
+        const user = authManager.getUser();
+        // Check both user metadata AND local plan override
+        const isPro = (user && user.plan === 'pro') || authManager.getPlan() === 'pro';
+        sendResponse({ isPro: isPro, plan: isPro ? 'pro' : 'free' });
+        return false;
+    }
+
     // 3. AI / API Handlers
     if (request.action === 'summarize_with_api') {
         handleSummarizeWithApi(request.text, sendResponse);
@@ -107,7 +116,8 @@ async function handleSummarizeWithApi(text, sendResponse) {
 
     try {
         const data = await chrome.storage.sync.get('geminiApiKey');
-        const apiKey = data.geminiApiKey;
+        // Use stored key OR fallback to config
+        const apiKey = data.geminiApiKey || (typeof ZenWebConfig !== 'undefined' ? ZenWebConfig.GEMINI_API_KEY : null);
 
         if (!apiKey) {
             sendResponse({ error: 'No API Key found. Please add it in settings.' });
@@ -172,7 +182,8 @@ async function handleChatWithApi(question, context, sendResponse) {
 
     try {
         const data = await chrome.storage.sync.get('geminiApiKey');
-        const apiKey = data.geminiApiKey;
+        // Use stored key OR fallback to config
+        const apiKey = data.geminiApiKey || (typeof ZenWebConfig !== 'undefined' ? ZenWebConfig.GEMINI_API_KEY : null);
 
         if (!apiKey) {
             sendResponse({ error: 'No API Key found.' });
@@ -184,7 +195,7 @@ PAGE CONTENT: ${context.substring(0, 15000)}
 USER QUESTION: ${question}
 ANSWER:`;
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })

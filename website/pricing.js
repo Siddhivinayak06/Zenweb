@@ -38,15 +38,20 @@ document.addEventListener('DOMContentLoaded', () => {
         // Call Background to upgrade user
         if (typeof chrome !== 'undefined' && chrome.runtime) {
             chrome.runtime.sendMessage({ action: 'simulate_upgrade' }, (response) => {
-                setTimeout(() => {
-                    document.body.innerHTML = `
-                        <div class="container" style="text-align:center; padding-top:100px;">
-                            <h1 style="color:#10b981">You are now Pro! 🚀</h1>
-                            <p class="subtitle">Close this tab and refresh the extension.</p>
-                            <button onclick="window.close()" class="cta-btn btn-pro" style="max-width:200px; margin:20px auto;">Close Page</button>
-                        </div>
-                    `;
-                }, 2000);
+                // ADDED CHECK: Only show success if upgrade actually worked
+                if (response && response.success) {
+                    setTimeout(() => {
+                        document.body.innerHTML = `
+                            <div class="container" style="text-align:center; padding-top:100px;">
+                                <h1 style="color:#10b981">You are now Pro! 🚀</h1>
+                                <p class="subtitle">Close this tab and refresh the extension.</p>
+                                <button onclick="window.close()" class="cta-btn btn-pro" style="max-width:200px; margin:20px auto;">Close Page</button>
+                            </div>
+                        `;
+                    }, 1500);
+                } else {
+                    alert("Activation failed! Please ensure you are logged in or try again.");
+                }
             });
         }
     }

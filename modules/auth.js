@@ -24,6 +24,10 @@ class AuthManager {
             return;
         }
 
+        // Load Local Plan (for anonymous upgrades)
+        const localData = await chrome.storage.sync.get(['localPlan']);
+        this.localPlan = localData.localPlan || null;
+
         // Check active session
         const { data: { session }, error } = await this.client.auth.getSession();
 
@@ -48,15 +52,20 @@ class AuthManager {
     }
 
     _normalizeUser(supabaseUser) {
+        // Respect local override if present and user plan is free
+        let plan = supabaseUser.user_metadata?.plan || 'free';
+        if (this.localPlan === 'pro') plan = 'pro';
+
         return {
             id: supabaseUser.id,
             email: supabaseUser.email,
             name: supabaseUser.user_metadata?.full_name || supabaseUser.email.split('@')[0],
             avatar: supabaseUser.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${supabaseUser.email.split('@')[0]}&background=random`,
-            // Check 'plan' in metadata, fallback to 'free'
-            plan: supabaseUser.user_metadata?.plan || 'free'
+            plan: plan
         };
     }
+
+    // ... (keep _loadUsage as is)
 
     async _loadUsage(userId) {
         const key = `usage_${userId}`;
@@ -107,24 +116,36 @@ class AuthManager {
     }
 
     async upgrade() {
-        if (!this.currentUser) return false;
+        console.log("ZenWeb: Processing Upgrade...");
 
-        // In a real app, this would be a webhook from Stripe updating Supabase.
-        // For MVP, we update user_metadata.
-        const { data, error } = await this.client.auth.updateUser({
-            data: { plan: 'pro' }
-        });
+        // 1. Try to update Supabase if logged in
+        if (this.currentUser) {
+            const { data, error } = await this.client.auth.updateUser({
+                data: { plan: 'pro' }
+            });
 
-        if (error) {
-            console.error("Upgrade failed", error);
-            return false;
+            if (!error && data.user) {
+                this.currentUser = this._normalizeUser(data.user);
+            } else {
+                console.warn("ZenWeb: Cloud update failed, falling back to local.", error);
+            }
         }
 
-        this.currentUser = this._normalizeUser(data.user);
+        // 2. ALWAYS set local plan to 'pro' on successful payment simulation
+        this.localPlan = 'pro';
+        await chrome.storage.sync.set({ localPlan: 'pro' });
+
+        // Force re-normalize if user exists to reflect change immediately
+        if (this.currentUser) {
+            // Need to re-fetch or just patch? Patching is safer for immediate UI
+            this.currentUser.plan = 'pro';
+        }
+
         return true;
     }
 
     getPlan() {
+        if (this.localPlan === 'pro') return 'pro';
         return this.currentUser ? this.currentUser.plan : 'free';
     }
 

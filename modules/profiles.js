@@ -86,26 +86,7 @@ class ProfileManager {
                     fatigueFilter: true
                 }
             },
-            vision: {
-                id: 'vision',
-                name: 'Vision Enhanced',
-                icon: '👁️',
-                description: 'High contrast and larger text',
-                settings: {
-                    autoFocus: false,
-                    timerDuration: 25,
-                    dimIntensity: 0.3,
-                    hideAnimations: true,
-                    hideAutoplay: true,
-                    highlightCurrentParagraph: true,
-                    reduceClutter: true,
-                    highContrast: true,
-                    fontSize: 24,
-                    lineSpacing: 1.8,
-                    cursorSize: 'large',
-                    boldText: true
-                }
-            },
+
             sensory: {
                 id: 'sensory',
                 name: 'Sensory Calm',

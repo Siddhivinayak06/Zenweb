@@ -41,6 +41,7 @@
             <div style="display:flex; flex-direction:column; gap:8px;">
               <input type="email" id="auth-email-input" placeholder="Email">
               <input type="password" id="auth-password-input" placeholder="Password">
+              <div id="auth-error-msg" style="font-size:12px; height:16px; margin-bottom:4px; color:#ef4444;"></div>
               <button id="btn-login" class="action-btn">Sign In</button>
             </div>
           </div>
@@ -59,8 +60,6 @@
           </div>
         </div>
 
-        <label>Gemini API Key</label>
-        <input type="password" id="api-key-input" placeholder="Paste API Key">
 
         <label>Voice</label>
         <select id="voice-select">
@@ -109,10 +108,7 @@
             <span class="profile-icon">🧠</span>
             <span class="profile-name">Neuro</span>
           </button>
-          <button class="profile-card" data-profile="vision">
-            <span class="profile-icon">👁️</span>
-            <span class="profile-name">Vision</span>
-          </button>
+
         </div>
 
         <!-- Dynamic Hover Info Panel -->
@@ -156,8 +152,7 @@
       </div>
 
       <!-- Quick Navigation -->
-      <div class="quick-nav" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;">
-        <button id="btn-dashboard" class="action-btn-outline">📊 Dashboard</button>
+      <div class="quick-nav" style="display:grid; grid-template-columns: 1fr; gap:10px; margin-bottom:15px;">
         <button id="btn-website" class="action-btn-outline">🌐 Website</button>
       </div>
 
@@ -169,7 +164,7 @@
         </summary>
         <div class="accordion-content">
           <div class="setting-row">
-            <span>Dyslexia Font</span>
+            <span>Font</span>
             <label class="toggle-switch small">
               <input type="checkbox" id="check-dyslexia">
               <span class="slider"></span>
@@ -228,6 +223,24 @@
       <div style="padding-top:10px; display:flex; gap:8px;">
         <button id="btn-copy-actions" class="action-btn">Copy</button>
         <button id="btn-export-actions" class="action-btn" style="background:#1e293b;">Export</button>
+      </div>
+    </div>
+
+    <!-- SUMMARY PANEL -->
+    <div id="summary-panel" class="settings-panel hidden">
+      <div class="settings-header">
+        <h2>Page Summary</h2>
+        <button id="btn-close-summary" class="close-btn">×</button>
+      </div>
+      <div class="settings-content" id="summary-content"
+        style="flex:1; overflow-y:auto; line-height: 1.6; font-size: 14px; color: var(--text-secondary);">
+        <!-- Content injected via JS -->
+      </div>
+      <div style="padding-top:10px; border-top: 1px solid var(--border-color); margin-top: 10px;">
+        <div style="font-size: 12px; color: var(--text-muted); display: flex; justify-content: space-between;">
+          <span>Used: 1 Credit</span>
+          <span id="summary-remaining">Remaining: --</span>
+        </div>
       </div>
     </div>
 

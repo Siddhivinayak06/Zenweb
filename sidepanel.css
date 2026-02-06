@@ -796,8 +796,20 @@ body {
     transform: scale(1.02);
 }
 
-.profile-chip.active::before {
-    opacity: 0;
+
+/* Summary Panel Items */
+.summary-item {
+    margin-bottom: 12px;
+    padding-left: 16px;
+    position: relative;
+}
+
+.summary-item::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: var(--accent-primary);
+    font-weight: bold;
 }
 
 .link-btn {
