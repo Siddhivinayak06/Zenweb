@@ -9,7 +9,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnFocus = document.getElementById('btn-focus');
   const btnPause = document.getElementById('btn-pause');
   const btnReset = document.getElementById('btn-reset');
-  const btnSummarize = document.getElementById('btn-summarize');
 
   // Status Elements
   const connectionStatus = document.getElementById('connection-status');
@@ -90,20 +89,15 @@ document.addEventListener('DOMContentLoaded', () => {
     sendMessage('recalculate_cognitive_score', {}, updateScoreUI);
   });
 
-  // Summary Elements
-  const summaryContainer = document.getElementById('summary-container');
-  const summarySection = document.getElementById('summary-section');
-  const summaryActions = document.getElementById('summary-actions');
-  const btnCopySummary = document.getElementById('btn-copy-summary');
-  const btnClearSummary = document.getElementById('btn-clear-summary');
 
   // Chat Elements
   const chatMessages = document.getElementById('chat-messages');
   const chatInput = document.getElementById('chat-input');
   const btnSendChat = document.getElementById('btn-send-chat');
 
-  // Dashboard
+  // Dashboard & Website
   const btnDashboard = document.getElementById('btn-dashboard');
+  const btnWebsite = document.getElementById('btn-website');
 
   // State
   let currentTabId = null;
@@ -941,91 +935,15 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ========================================
-  // AI SUMMARY
+  // QUICK LINKS
   // ========================================
 
-  btnSummarize?.addEventListener('click', async () => {
-    summaryContainer.innerHTML = '<p class="summary-placeholder">⏳ Generating summary...</p>';
-    summarySection.open = true;
-
-    sendMessage('summarize', {}, (response) => {
-      if (!response) {
-        summaryContainer.innerHTML = '<p class="summary-placeholder">❌ Could not generate summary</p>';
-        return;
-      }
-
-      if (response.summary) {
-        summaryContainer.innerHTML = `<div class="summary-text">${formatSummary(response.summary)}</div>`;
-        const remaining = response.remaining;
-        if (remaining !== undefined && remaining !== 'Unlimited') {
-          // Optional: Show remaining count toast
-          const badge = document.createElement('div');
-          badge.className = 'limit-badge';
-          badge.innerHTML = `<span style="font-size:10px; opacity:0.7">${remaining} free credits left</span>`;
-          summaryContainer.prepend(badge);
-        }
-        summaryActions.classList.remove('hidden');
-      } else if (response.limitReached) {
-        summaryContainer.innerHTML = `
-      <div class="action-empty-state" style="padding: 20px;">
-                <div style="font-size: 32px; margin-bottom: 15px;">🛑</div>
-                <h4 style="margin-bottom: 8px;">Free Limit Reached</h4>
-                <p style="font-size: 13px; margin-bottom: 15px;">You've used your 5 free AI summaries this month.</p>
-                <button id="btn-upgrade-summary" class="action-btn" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">Upgrade to Unlimited</button>
-            </div>
-      `;
-        document.getElementById('btn-upgrade-summary')?.addEventListener('click', () => {
-          chrome.tabs.create({ url: chrome.runtime.getURL('website/pricing.html') });
-        });
-      } else if (response.error) {
-        summaryContainer.innerHTML = `<p class="summary-placeholder">❌ ${response.error}</p>`;
-      }
-    });
+  btnDashboard?.addEventListener('click', () => {
+    chrome.tabs.create({ url: chrome.runtime.getURL('website/dashboard.html') });
   });
 
-  function formatSummary(text) {
-    // 1. Handle non-string inputs (e.g. pure JSON objects)
-    if (typeof text !== 'string') {
-      if (Array.isArray(text)) {
-        return '<ul>' + text.map(item => `<li>${String(item).replace(/^[-•]\s*/, '')}</li>`).join('') + '</ul>';
-      }
-      try {
-        text = JSON.stringify(text, null, 2);
-      } catch (e) {
-        text = String(text);
-      }
-    }
-
-    // 2. Handle String inputs
-    // Check if it's a JSON string representation of an array
-    if (text.trim().startsWith('[') && text.trim().endsWith(']')) {
-      try {
-        const parsed = JSON.parse(text);
-        if (Array.isArray(parsed)) {
-          return '<ul>' + parsed.map(item => `< li > ${String(item).replace(/^[-•]\s*/, '')}</li > `).join('') + '</ul>';
-        }
-      } catch (e) {
-        // Not valid JSON, continue to normal text processing
-      }
-    }
-
-    // Convert bullet points to list
-    const lines = text.split('\n').filter(l => l.trim());
-    if (lines.length > 0 && lines.every(l => l.trim().startsWith('-') || l.trim().startsWith('•') || l.trim().match(/^\d+\./))) {
-      return '<ul>' + lines.map(l => `< li > ${l.replace(/^[-•]\s*|^\d+\.\s*/, '')}</li > `).join('') + '</ul>';
-    }
-    return `< p > ${text.replace(/\n/g, '<br>')}</p > `;
-  }
-
-
-  btnCopySummary?.addEventListener('click', () => {
-    const text = summaryContainer.innerText;
-    navigator.clipboard.writeText(text);
-  });
-
-  btnClearSummary?.addEventListener('click', () => {
-    summaryContainer.innerHTML = '<p class="summary-placeholder">Click "Summarize" above to analyze this page</p>';
-    summaryActions.classList.add('hidden');
+  btnWebsite?.addEventListener('click', () => {
+    chrome.tabs.create({ url: chrome.runtime.getURL('website/index.html') });
   });
 
   // ========================================

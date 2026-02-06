@@ -1081,27 +1081,8 @@ body {
     border-top: 1px solid var(--border-color);
 }
 
-.footer-link {
-    width: 100%;
-    padding: 10px;
-    background: transparent;
-    border: 1px dashed var(--border-color);
-    border-radius: var(--radius-sm);
-    color: var(--text-secondary);
-    font-size: 12px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: var(--trans-fast);
-}
-
-.footer-link:hover {
-    background: rgba(99, 102, 241, 0.05);
-    border-color: var(--accent-primary);
-    color: var(--accent-primary);
-}
-
 /* =====================================================
-   ACTION BUTTON
+   ACTION BUTTONS
    ===================================================== */
 
 .action-btn {
@@ -1109,18 +1090,44 @@ body {
     padding: 12px;
     background: var(--primary-gradient);
     border: none;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     color: white;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    transition: var(--trans-fast);
-    margin-top: 12px;
+    transition: var(--trans-smooth);
+    margin-top: 10px;
+    box-shadow: var(--shadow-sm);
 }
 
 .action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    filter: brightness(1.05);
+}
+
+.action-btn-outline {
+    width: 100%;
+    padding: 10px;
+    background: #ffffff;
+    color: var(--text-primary);
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: var(--trans-fast);
+}
+
+.action-btn-outline:hover {
+    border-color: var(--accent-primary);
+    background: #f8fafc;
+    color: var(--accent-primary);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
 /* =====================================================
