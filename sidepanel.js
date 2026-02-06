@@ -282,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load profile
     chrome.storage.sync.get(['activeProfile'], (result) => {
       currentActiveProfile = result.activeProfile || null;
-      updateProfileUI(currentActiveProfile);
+      // updateProfileUI removed; handled by auto-load block
     });
 
     // Load dyslexia font, bionic reading, and other settings
@@ -362,8 +362,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Support both modes being active simultaneously
     const simplifyOn = response?.simplifyActive || mode === 'simplify' || mode === 'both';
     const focusOn = response?.focusActive || mode === 'focus' || mode === 'both';
-    btnSimplify.classList.toggle('active', simplifyOn);
-    btnFocus.classList.toggle('active', focusOn);
+    if (btnSimplify) btnSimplify.classList.toggle('active', simplifyOn);
+    if (btnFocus) btnFocus.classList.toggle('active', focusOn);
   }
 
   // ========================================
@@ -456,47 +456,239 @@ document.addEventListener('DOMContentLoaded', () => {
   // PROFILES
   // ========================================
 
-  function updateProfileUI(profileId) {
-    profileChips.forEach(chip => {
-      chip.classList.toggle('active', chip.dataset.profile === profileId);
-    });
-    btnClearProfile?.classList.toggle('hidden', !profileId);
+  // ========================================
+  // ADAPTIVE TOOLS LOGIC
+  // ========================================
 
-    // Show/Hide Edit Custom button
-    if (profileId === 'custom') {
-      btnEditCustom?.classList.remove('hidden');
-    } else {
-      btnEditCustom?.classList.add('hidden');
-      customEditor?.classList.add('hidden');
+  const adaptiveTools = document.getElementById('adaptive-tools');
+  const toolContainer = document.getElementById('tool-container');
+  const activeProfileName = document.getElementById('active-profile-name');
+  const profileSection = document.querySelector('.profile-section');
+  const btnResetTools = document.getElementById('btn-reset-tools');
+  const profileCards = document.querySelectorAll('.profile-card');
+
+  // Tool Definitions
+  const tools = {
+    focus: { id: 'btn-focus', icon: '🎯', label: 'Focus Mode', action: 'toggle_focus' },
+    simplify: { id: 'btn-simplify', icon: '📖', label: 'Simplify', action: 'toggle_simplify' },
+    dyslexia: { id: 'check-dyslexia', icon: 'Aa', label: 'Dyslexia Font', type: 'toggle', action: 'toggle_dyslexia' },
+    summarize: { id: 'btn-summarize', icon: '✨', label: 'Summarize', action: 'summarize' },
+    pause: { id: 'btn-pause', icon: '⏸️', label: 'Pause Animations', action: 'toggle_pause' },
+    speech: { id: 'btn-speech', icon: '🗣️', label: 'Read Aloud', action: 'read_aloud' },
+    zoom: { id: 'btn-zoom', icon: '🔍', label: 'Text Size', type: 'range', action: 'set_zoom' }
+  };
+
+  // Profile Configurations
+  const profileConfigs = {
+    adhd: {
+      name: 'ADHD Mode',
+      description: 'Optimized for focus and attention.',
+      features: [
+        { label: '15m Focus Timer ⏱️', detail: 'Uses the Pomodoro technique to break work into manageable 15-minute chunks.' },
+        { label: 'Blocked Animations 🚫', detail: 'Stops distracting GIFs and CSS animations to keep your focus steady.' },
+        { label: 'Simplified Layout ✨', detail: 'Removes sidebar clutter and non-essential elements.' },
+        { label: 'Auto-Summarizer 📝', detail: 'Automatically generates a concise summary of long articles.' }
+      ],
+      tools: ['focus', 'simplify', 'pause', 'summarize']
+    },
+    dyslexia: {
+      name: 'Dyslexia Mode',
+      description: 'Enhanced readability settings.',
+      features: [
+        { label: 'Dyslexia Font 📖', detail: 'Applies OpenDyslexic font to improve reading accuracy.' },
+        { label: 'Speech-to-Text 🗣️', detail: 'Reads the page content aloud with natural voice.' },
+        { label: 'Larger Text 🔍', detail: 'Increases font size and line spacing for better clarity.' },
+        { label: 'High Contrast 🌗', detail: 'Adjusts colors to maximize text visibility.' }
+      ],
+      tools: ['dyslexia', 'speech', 'simplify', 'zoom']
+    },
+    anxiety: {
+      name: 'Calm Mode',
+      description: 'Reduces sensory overload.',
+      features: [
+        { label: 'Soft Colors (Sepia) ☕', detail: 'Applies a warm sepia tone to reduce eye strain and anxiety.' },
+        { label: 'Hidden Distractions 🛡️', detail: 'Blocks popups, ads, and notification badges.' },
+        { label: 'No Animations ⏸️', detail: 'Pauses all moving elements to create a static, calm environment.' },
+        { label: 'Breathing Guide 🧘', detail: 'Provides visual cues for calming breathing exercises.' }
+      ],
+      tools: ['simplify', 'pause', 'focus']
+    },
+    vision: {
+      name: 'Vision Mode',
+      description: 'Visual accessibility helpers.',
+      features: [
+        { label: 'Maximized Text Size 🔍', detail: 'Scales text to 150% for maximum visibility.' },
+        { label: 'Read Aloud 🗣️', detail: 'Converts text to speech for auditory consumption.' },
+        { label: 'High Contrast 🌗', detail: 'Inverts colors to white-on-black for reduced glare.' },
+        { label: 'Dyslexia Friendly 📖', detail: 'Optimizes fonts for easier character recognition.' }
+      ],
+      tools: ['zoom', 'speech', 'dyslexia']
     }
-  }
+  };
 
-  profileChips.forEach(chip => {
-    chip.addEventListener('click', () => {
-      const profileId = chip.dataset.profile;
-      if (profileId === currentActiveProfile) {
-        clearProfile();
-      } else {
-        setProfile(profileId);
+  // Profile Selection
+  const modeInfoPanel = document.getElementById('mode-info-panel');
+  const infoTitle = document.getElementById('info-title');
+  const infoDesc = document.getElementById('info-desc');
+
+  // Detail Box (Static)
+  const detailBox = document.getElementById('feature-detail-box');
+
+  let hideTimeout;
+
+  const showInfoPanel = () => {
+    if (hideTimeout) clearTimeout(hideTimeout);
+    modeInfoPanel?.classList.remove('hidden');
+  };
+
+  const hideInfoPanel = () => {
+    if (hideTimeout) clearTimeout(hideTimeout);
+    hideTimeout = setTimeout(() => {
+      modeInfoPanel?.classList.add('hidden');
+      if (detailBox) detailBox.classList.add('hidden');
+    }, 2000); // 2 second delay
+  };
+
+  profileCards.forEach(card => {
+    card.addEventListener('click', () => {
+      const profile = card.dataset.profile;
+      activateProfile(profile);
+    });
+
+    // Hover Effect
+    card.addEventListener('mouseenter', () => {
+      const profileId = card.dataset.profile;
+      const config = profileConfigs[profileId];
+      if (config) {
+        showInfoPanel();
+        infoTitle.textContent = config.name;
+
+        if (config.features) {
+          // Generate list with data attributes
+          const listHtml = config.features.map((f, index) =>
+            `<li class="feature-item" data-index="${index}" style="margin-bottom:4px; cursor:help;">${f.label}</li>`
+          ).join('');
+          infoDesc.innerHTML = `<ul style="padding-left:16px; margin:4px 0;">${listHtml}</ul>`;
+
+          // Add hover listeners to the new list items
+          const items = infoDesc.querySelectorAll('.feature-item');
+          items.forEach(item => {
+            item.addEventListener('mouseenter', (e) => {
+              e.stopPropagation();
+              const idx = item.dataset.index;
+              const feature = config.features[idx];
+              if (feature && detailBox) {
+                detailBox.textContent = feature.detail;
+                detailBox.classList.remove('hidden');
+                item.style.color = 'var(--accent-primary)';
+              }
+            });
+            item.addEventListener('mouseleave', () => {
+              // We don't necessarily need to hide the detailBox here if we want it to stay for 2s too
+              // but standard behavior is the detail follows the main panel.
+              // Let's keep it simple: resetting the color is fine.
+              item.style.color = '';
+            });
+          });
+
+        } else {
+          infoDesc.textContent = config.description;
+        }
       }
+    });
+
+    card.addEventListener('mouseleave', () => {
+      hideInfoPanel();
     });
   });
 
-  function setProfile(profileId) {
-    sendMessage('set_profile', { profileId }, () => {
-      currentActiveProfile = profileId;
-      updateProfileUI(profileId);
+  // Keep panel open if hovering the panel itself
+  modeInfoPanel?.addEventListener('mouseenter', showInfoPanel);
+  modeInfoPanel?.addEventListener('mouseleave', hideInfoPanel);
+
+  btnResetTools?.addEventListener('click', () => {
+    resetToProfileSelection();
+  });
+
+  function activateProfile(profileId) {
+    const config = profileConfigs[profileId];
+    if (!config) return;
+
+    // UI Transition
+    profileSection.classList.add('hidden');
+    adaptiveTools.classList.remove('hidden');
+    activeProfileName.textContent = config.name;
+
+    // Render Tools
+    renderTools(config.tools);
+
+    // Persist
+    chrome.storage.sync.set({ activeProfile: profileId });
+    sendMessage('set_profile', { profileId });
+  }
+
+  function resetToProfileSelection() {
+    profileSection.classList.remove('hidden');
+    adaptiveTools.classList.add('hidden');
+    chrome.storage.sync.remove('activeProfile');
+    sendMessage('clear_profile');
+  }
+
+  function renderTools(toolKeys) {
+    toolContainer.innerHTML = '';
+    toolKeys.forEach(key => {
+      const tool = tools[key];
+      if (!tool) return;
+
+      const btn = document.createElement('button');
+      btn.className = 'quick-btn';
+      btn.innerHTML = `
+        <span class="quick-icon">${tool.icon}</span>
+        <span class="quick-label">${tool.label}</span>
+      `;
+
+      btn.addEventListener('click', () => {
+        if (tool.action === 'toggle_dyslexia') {
+          const isActive = btn.classList.toggle('active');
+          sendMessage(isActive ? 'enable_dyslexia' : 'disable_dyslexia');
+        } else {
+          sendMessage(tool.action, {}, () => refreshStatus());
+        }
+      });
+
+      toolContainer.appendChild(btn);
     });
   }
 
-  function clearProfile() {
-    sendMessage('clear_profile', {}, () => {
-      currentActiveProfile = null;
-      updateProfileUI(null);
-    });
-  }
+  // Auto-load profile
+  chrome.storage.sync.get(['activeProfile'], (result) => {
+    if (result.activeProfile && profileConfigs[result.activeProfile]) {
+      activateProfile(result.activeProfile);
+    }
+  });
 
-  btnClearProfile?.addEventListener('click', clearProfile);
+  // ========================================
+  // AD BLOCKER LOGIC
+  // ========================================
+  const checkAdBlockerMain = document.getElementById('check-adblocker-main');
+
+  // Sync on load
+  chrome.storage.local.get(['adBlockerEnabled'], (result) => {
+    const enabled = result.adBlockerEnabled !== false; // Default true
+    if (checkAdBlockerMain) checkAdBlockerMain.checked = enabled;
+  });
+
+  checkAdBlockerMain?.addEventListener('change', (e) => {
+    const isEnabled = e.target.checked;
+    sendMessage(isEnabled ? 'enable_adblocker' : 'disable_adblocker');
+    if (checkAdBlocker) checkAdBlocker.checked = isEnabled;
+  });
+
+  checkAdBlocker?.addEventListener('change', (e) => {
+    if (checkAdBlockerMain) checkAdBlockerMain.checked = e.target.checked;
+    const isEnabled = e.target.checked;
+    sendMessage(isEnabled ? 'enable_adblocker' : 'disable_adblocker');
+  });
 
   // ========================================
   // CUSTOM PROFILE EDITOR LOGIC
@@ -945,7 +1137,9 @@ document.addEventListener('DOMContentLoaded', () => {
   chrome.storage.onChanged.addListener((changes, namespace) => {
     if (namespace === 'sync' && changes.activeProfile) {
       currentActiveProfile = changes.activeProfile.newValue || null;
-      updateProfileUI(currentActiveProfile);
+      if (currentActiveProfile && profileConfigs[currentActiveProfile]) {
+        activateProfile(currentActiveProfile);
+      }
     }
     if (namespace === 'local') {
       if (changes.theme) updateThemeUI(changes.theme.newValue);

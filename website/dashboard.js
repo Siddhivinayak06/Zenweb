@@ -138,6 +138,12 @@ function calculateSummary(events, days) {
                     summary.aiUsage[feature]++;
                 }
                 break;
+
+            case 'distraction_blocked':
+                const hour = new Date(event.timestamp).getHours();
+                summary.distractions = summary.distractions || new Array(24).fill(0);
+                summary.distractions[hour]++;
+                break;
         }
     });
 
@@ -169,6 +175,14 @@ function updateStats(summary) {
         ? Math.round((summary.focusSessions.completed / summary.focusSessions.total) * 100)
         : 0;
     document.getElementById('stat-completion').textContent = completionRate + '%';
+
+    // New Params
+    if (summary.focusScore) {
+        document.getElementById('stat-focus-score').textContent = summary.focusScore;
+        const zenElement = document.getElementById('stat-zen-level');
+        zenElement.textContent = summary.zenLevel.label;
+        zenElement.style.color = summary.zenLevel.color;
+    }
 }
 
 /**
@@ -180,6 +194,7 @@ function updateCharts(summary) {
     updateProfilesChart(summary.profileUsage);
     updateAIChart(summary.aiUsage);
     updateCognitiveChart(summary.cognitiveScores);
+    updateHeatmapChart(summary.distractions);
 }
 
 /**
@@ -397,6 +412,52 @@ function updateCognitiveChart(scores) {
 }
 
 /**
+ * Heatmap Chart (Hourly Distractions)
+ */
+function updateHeatmapChart(hourlyDistractions) {
+    const ctx = document.getElementById('chart-heatmap').getContext('2d');
+
+    // Default to empty 24h array if no data
+    const data = hourlyDistractions || new Array(24).fill(0);
+    const labels = Array.from({ length: 24 }, (_, i) => `${i}:00`);
+
+    if (window.heatmapChart) window.heatmapChart.destroy();
+
+    window.heatmapChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Distractions Blocked',
+                data: data,
+                backgroundColor: (context) => {
+                    const value = context.raw;
+                    const alpha = Math.min(value / 10, 1) * 0.8 + 0.2; // Opacity based on intensity
+                    return `rgba(239, 68, 68, ${alpha})`; // Red intensity
+                },
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (context) => `${context.raw} blocked items`
+                    }
+                }
+            },
+            scales: {
+                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+}
+
+/**
  * Update top sites list
  */
 function updateTopSites(topSites) {
@@ -408,12 +469,51 @@ function updateTopSites(topSites) {
         return;
     }
 
-    list.innerHTML = entries.map(([site, count]) => `
+    list.innerHTML = entries.map(([site, count]) => {
+        // Simple heuristic to get domain
+        let domain = site;
+        try {
+            domain = new URL(site).hostname;
+        } catch (e) { }
+
+        return `
         <li>
-            <span class="site-name">${escapeHtml(site)}</span>
-            <span class="site-count">${count} visits</span>
+            <div class="site-info">
+                <span class="site-name" title="${escapeHtml(site)}">${escapeHtml(domain)}</span>
+                <span class="site-count">${count} visits</span>
+            </div>
+            <button class="btn-block-site" data-site="${escapeHtml(domain)}" title="Block this site">🚫</button>
         </li>
-    `).join('');
+    `}).join('');
+
+    // Add listeners
+    document.querySelectorAll('.btn-block-site').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const site = e.target.dataset.site;
+            handleBlockSite(site);
+        });
+    });
+}
+
+/**
+ * Handle Block Site Action
+ */
+async function handleBlockSite(domain) {
+    if (!confirm(`Do you want to add "${domain}" to your Blocked Sites list?`)) return;
+
+    chrome.storage.local.get(['blockedSites'], (result) => {
+        const blocked = result.blockedSites || [];
+        if (!blocked.includes(domain)) {
+            blocked.push(domain);
+            chrome.storage.local.set({ blockedSites: blocked }, () => {
+                alert(`"${domain}" has been blocked.`);
+                // Ideally refresh the list or blacklist it visually
+                loadAnalytics();
+            });
+        } else {
+            alert(`"${domain}" is already blocked.`);
+        }
+    });
 }
 
 /**

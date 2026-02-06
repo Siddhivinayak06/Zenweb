@@ -1,6 +1,26 @@
 // Note: AuthManager is removed from here as it is centralized in Background Script.
 // We communicate with background for auth checks.
 
+// Track right-clicked element for Ad Blocker context menu
+let lastRightClickedElement = null;
+document.addEventListener('contextmenu', (event) => {
+    lastRightClickedElement = event.target;
+}, true);
+
+// Listen for Context Menu messages
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === 'block_element_context') {
+        if (lastRightClickedElement) {
+            const blocker = new AdBlocker();
+            blocker.forceHideElement(lastRightClickedElement);
+            const parent = lastRightClickedElement.parentElement;
+            if (parent && parent.tagName === 'DIV' && parent.children.length === 1) {
+                blocker.forceHideElement(parent);
+            }
+        }
+    }
+});
+
 class ContextAwareController {
     constructor() {
         // Support both modes simultaneously

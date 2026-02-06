@@ -47,6 +47,47 @@ class ProfileManager {
                     wordSpacing: 0.16
                 }
             },
+
+            anxiety: {
+                id: 'anxiety',
+                name: 'Calm Focus',
+                icon: '🧘',
+                description: 'Reduces stress triggers and simplifies UI',
+                settings: {
+                    autoFocus: false,
+                    timerDuration: 20,
+                    dimIntensity: 0.8,
+                    hideAnimations: true,
+                    hideAutoplay: true,
+                    highlightCurrentParagraph: false,
+                    reduceClutter: true,
+                    mutedColors: true,
+                    reduceContrast: false,
+                    fontSize: 16,
+                    lineSpacing: 1.6,
+                    autoMuteMedia: true
+                }
+            },
+            vision: {
+                id: 'vision',
+                name: 'Vision Enhanced',
+                icon: '👁️',
+                description: 'High contrast and larger text',
+                settings: {
+                    autoFocus: false,
+                    timerDuration: 25,
+                    dimIntensity: 0.3,
+                    hideAnimations: true,
+                    hideAutoplay: true,
+                    highlightCurrentParagraph: true,
+                    reduceClutter: true,
+                    highContrast: true,
+                    fontSize: 24,
+                    lineSpacing: 1.8,
+                    cursorSize: 'large',
+                    boldText: true
+                }
+            },
             lowVision: {
                 id: 'lowVision',
                 name: 'Low Vision',

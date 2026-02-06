@@ -10,6 +10,19 @@ const authManager = new AuthManager();
 // Wait for init? authManager.init() is async.
 // Since it relies on storage, it's fast. We'll handle 'not ready' gracefully.
 authManager.init();
+chrome.contextMenus.removeAll();
+chrome.contextMenus.create({
+    id: "zenweb-block-element",
+    title: "Hide this element (ZenWeb)",
+    contexts: ["all"]
+});
+
+// Context Menu Handler
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+    if (info.menuItemId === "zenweb-block-element") {
+        chrome.tabs.sendMessage(tab.id, { action: "block_element_context" });
+    }
+});
 
 // Message Handling
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
