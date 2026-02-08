@@ -27,6 +27,10 @@ yarn-error.log
 dist/
 build/
 
+# Config Files
+config.js
+website/config.js
+
 # Local Gemini / Agent files (if stored locally in project, though usually in .gemini)
 # We want to keep the artifacts if they are in the project, but maybe ignore temp stuff.
 # For now, standard ignores are safe.
