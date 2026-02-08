@@ -54,16 +54,20 @@ To use AI features, you need a Google Gemini API Key.
 ### 2. Installation (Developer Mode)
 1.  Clone this repository:
     ```bash
-    git clone https://github.com/Bethuel-Shilesh/Berozgar-Coders.git
+    git clone https://github.com/Siddhivinayak06/Zenweb.git
     ```
 2.  Open Chrome and go to `chrome://extensions/`.
 3.  Enable **Developer mode** (top right).
 4.  Click **Load unpacked** and select the extension folder.
 
 ### 3. Setup
-1.  Open the ZenWeb Side Panel.
-2.  Go to **Settings** (⚙️).
-3.  Paste your **Gemini API Key** and save.
+1.  **Configure API Keys**:
+    - Copy `config.example.js` to `config.js`.
+    - Copy `website/config.example.js` to `website/config.js`.
+    - Open the newly created `config.js` files and add your Supabase and Gemini API keys.
+2.  Open the ZenWeb Side Panel.
+3.  Go to **Settings** (⚙️).
+4.  Ensure your **Gemini API Key** is correctly configured.
 
 ---
 
