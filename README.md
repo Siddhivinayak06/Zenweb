@@ -56,18 +56,51 @@ To use AI features, you need a Google Gemini API Key.
     ```bash
     git clone https://github.com/Siddhivinayak06/Zenweb.git
     ```
-2.  Open Chrome and go to `chrome://extensions/`.
-3.  Enable **Developer mode** (top right).
-4.  Click **Load unpacked** and select the extension folder.
+2.  Move into the project folder:
+    ```bash
+    cd Zenweb
+    ```
+3.  Open Chrome and go to `chrome://extensions/`.
+4.  Enable **Developer mode** (top right).
+5.  Click **Load unpacked** and select the extension folder.
 
 ### 3. Setup
 1.  **Configure API Keys**:
-    - Copy `config.example.js` to `config.js`.
-    - Copy `website/config.example.js` to `website/config.js`.
-    - Open the newly created `config.js` files and add your Supabase and Gemini API keys.
+    - Copy `.env.example` to `.env`.
+    - Open `.env` and add your Supabase, Stripe, and Gemini keys.
+    - Generate runtime config files from `.env`:
+      ```bash
+      npm run generate-config
+      ```
+    - Optional (recommended while developing): auto-sync config files when `.env` changes:
+      ```bash
+      npm run watch-config
+      ```
 2.  Open the ZenWeb Side Panel.
 3.  Go to **Settings** (⚙️).
 4.  Ensure your **Gemini API Key** is correctly configured.
+5.  After changing `.env`, regenerate config files (or keep `watch-config` running) and reload the extension from `chrome://extensions`.
+
+### 4. Environment Variables
+
+ZenWeb uses a `.env` file in the project root and generates runtime config files used by the extension and website.
+
+Required keys:
+
+- `SUPABASE_URL`
+- `SUPABASE_KEY`
+- `STRIPE_PAYMENT_LINK`
+- `GEMINI_API_KEY`
+
+Generated files (auto-ignored by git):
+
+- `config.js`
+- `website/config.js`
+
+Available scripts:
+
+- `npm run generate-config`: one-time generation from `.env`
+- `npm run watch-config`: auto-regenerate when `.env` changes
 
 ---
 

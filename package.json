@@ -1,0 +1,9 @@
+{
+  "name": "zenweb",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "generate-config": "node scripts/generate-config.js",
+    "watch-config": "node scripts/generate-config.js --watch"
+  }
+}

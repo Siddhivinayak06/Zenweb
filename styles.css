@@ -45,19 +45,43 @@ body.context-aware-focus .context-aware-reader-overlay .context-aware-reader-con
 body.context-aware-focus .context-aware-reader-overlay .context-aware-reader-content img,
 body.context-aware-focus .context-aware-reader-overlay .context-aware-reader-content figure,
 body.context-aware-focus .context-aware-reader-overlay .context-aware-reader-content .context-aware-reader-meta {
-    opacity: 0.2;
-    filter: blur(1.5px);
+    opacity: 0.34;
+    filter: blur(1px);
     transition: opacity 0.3s ease, filter 0.3s ease;
 }
 
 body.context-aware-focus .context-aware-reader-overlay .context-aware-reader-content .focus-mode-highlight {
     opacity: 1 !important;
     filter: none !important;
-    background-color: rgba(255, 255, 255, 0.05);
-    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.05), 0 4px 20px rgba(0, 0, 0, 0.5);
+    background-color: rgba(15, 23, 42, 0.94);
+    box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.45), 0 6px 24px rgba(15, 23, 42, 0.35);
     border-radius: 6px;
-    color: #e2e8f0 !important;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+    color: #f8fafc !important;
+    text-shadow: 0 1px 2px rgba(2, 6, 23, 0.65);
+}
+
+body.context-aware-focus .context-aware-reader-overlay .context-aware-reader-content .focus-mode-highlight,
+body.context-aware-focus .context-aware-reader-overlay .context-aware-reader-content .focus-mode-highlight * {
+    color: #f8fafc !important;
+}
+
+/* If a parent block is highlighted, all inner content must stay fully visible */
+body.context-aware-focus .context-aware-reader-overlay .context-aware-reader-content .focus-mode-highlight p,
+body.context-aware-focus .context-aware-reader-overlay .context-aware-reader-content .focus-mode-highlight h1,
+body.context-aware-focus .context-aware-reader-overlay .context-aware-reader-content .focus-mode-highlight h2,
+body.context-aware-focus .context-aware-reader-overlay .context-aware-reader-content .focus-mode-highlight h3,
+body.context-aware-focus .context-aware-reader-overlay .context-aware-reader-content .focus-mode-highlight h4,
+body.context-aware-focus .context-aware-reader-overlay .context-aware-reader-content .focus-mode-highlight h5,
+body.context-aware-focus .context-aware-reader-overlay .context-aware-reader-content .focus-mode-highlight h6,
+body.context-aware-focus .context-aware-reader-overlay .context-aware-reader-content .focus-mode-highlight li,
+body.context-aware-focus .context-aware-reader-overlay .context-aware-reader-content .focus-mode-highlight blockquote,
+body.context-aware-focus .context-aware-reader-overlay .context-aware-reader-content .focus-mode-highlight span,
+body.context-aware-focus .context-aware-reader-overlay .context-aware-reader-content .focus-mode-highlight a,
+body.context-aware-focus .context-aware-reader-overlay .context-aware-reader-content .focus-mode-highlight strong,
+body.context-aware-focus .context-aware-reader-overlay .context-aware-reader-content .focus-mode-highlight em,
+body.context-aware-focus .context-aware-reader-overlay .context-aware-reader-content .focus-mode-highlight small {
+    opacity: 1 !important;
+    filter: none !important;
 }
 
 /* Light theme combined mode */
@@ -78,10 +102,15 @@ body.context-aware-focus .context-aware-reader-overlay.context-aware-theme-light
 }
 
 body.context-aware-focus .context-aware-reader-overlay.context-aware-theme-light .context-aware-reader-content .focus-mode-highlight {
-    color: #000 !important;
-    background-color: transparent;
+    color: #0f172a !important;
+    background-color: rgba(255, 255, 255, 0.96);
     text-shadow: none;
     font-weight: 500;
+}
+
+body.context-aware-focus .context-aware-reader-overlay.context-aware-theme-light .context-aware-reader-content .focus-mode-highlight,
+body.context-aware-focus .context-aware-reader-overlay.context-aware-theme-light .context-aware-reader-content .focus-mode-highlight * {
+    color: #0f172a !important;
 }
 
 /* Sepia theme combined mode */
@@ -98,9 +127,14 @@ body.context-aware-focus .context-aware-reader-overlay.context-aware-theme-sepia
 
 body.context-aware-focus .context-aware-reader-overlay.context-aware-theme-sepia .context-aware-reader-content .focus-mode-highlight {
     color: #4b3b28 !important;
-    background-color: rgba(95, 75, 50, 0.05);
+    background-color: rgba(253, 245, 230, 0.95);
     text-shadow: none;
     font-weight: 500;
+}
+
+body.context-aware-focus .context-aware-reader-overlay.context-aware-theme-sepia .context-aware-reader-content .focus-mode-highlight,
+body.context-aware-focus .context-aware-reader-overlay.context-aware-theme-sepia .context-aware-reader-content .focus-mode-highlight * {
+    color: #4b3b28 !important;
 }
 
 /* Toolbar */
@@ -374,8 +408,8 @@ body::after {
 
 /* Dynamic Spotlight: Pitch black when focusing on content */
 body.context-aware-focus:has(.focus-mode-highlight)::after {
-    background-color: rgba(5, 5, 5, 0.98) !important;
-    backdrop-filter: blur(4px);
+    background-color: rgba(10, 15, 22, 0.86) !important;
+    backdrop-filter: blur(2px);
 }
 
 body.context-aware-focus::after {
@@ -404,6 +438,11 @@ body.context-aware-focus.context-aware-theme-light .focus-mode-highlight {
     text-shadow: none !important;
 }
 
+body.context-aware-focus.context-aware-theme-light .focus-mode-highlight,
+body.context-aware-focus.context-aware-theme-light .focus-mode-highlight * {
+    color: #1e293b !important;
+}
+
 /* Theme: Sepia Focus Overlay */
 body.context-aware-focus.context-aware-theme-sepia::after {
     background: rgba(248, 241, 227, 0.9) !important;
@@ -422,6 +461,11 @@ body.context-aware-focus.context-aware-theme-sepia .focus-mode-highlight {
         0 0 30px rgba(180, 130, 80, 0.3),
         0 8px 32px rgba(0, 0, 0, 0.15);
     text-shadow: none !important;
+}
+
+body.context-aware-focus.context-aware-theme-sepia .focus-mode-highlight,
+body.context-aware-focus.context-aware-theme-sepia .focus-mode-highlight * {
+    color: #4a3728 !important;
 }
 
 
@@ -680,15 +724,13 @@ body.context-aware-focus .zenweb-reading-guide {
     z-index: 2147483647 !important;
     isolation: isolate;
     /* Creates new stacking context */
-    color: #f1f5f9 !important;
-    background-color: rgba(30, 41, 59, 0.95) !important;
-    /* Darker, more visible background */
+    color: #f8fafc !important;
+    background-color: rgba(15, 23, 42, 0.94) !important;
+    /* Dark-theme default; overridden by light/sepia theme rules below */
     box-shadow:
-        0 0 0 4px rgba(59, 130, 246, 0.5),
-        /* Blue glow ring */
-        0 0 30px rgba(59, 130, 246, 0.3),
-        /* Outer glow */
-        0 8px 32px rgba(0, 0, 0, 0.6);
+        0 0 0 4px rgba(56, 189, 248, 0.45),
+        0 0 22px rgba(56, 189, 248, 0.2),
+        0 8px 26px rgba(15, 23, 42, 0.28);
     /* Shadow for depth */
     border-radius: 8px;
     padding: 8px 12px !important;
@@ -700,9 +742,21 @@ body.context-aware-focus .zenweb-reading-guide {
 
 /* Make highlighted text very readable on dark overlay */
 body.context-aware-focus .focus-mode-highlight {
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
-    color: #ffffff !important;
+    text-shadow: 0 1px 2px rgba(2, 6, 23, 0.65);
+    color: #f8fafc !important;
     font-weight: 500;
+}
+
+body.context-aware-focus .focus-mode-highlight,
+body.context-aware-focus .focus-mode-highlight * {
+    color: #f8fafc !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+body.context-aware-focus.context-aware-theme-dark .focus-mode-highlight,
+body.context-aware-focus.context-aware-theme-dark .focus-mode-highlight * {
+    color: #f8fafc !important;
+    -webkit-text-fill-color: currentColor !important;
 }
 
 
